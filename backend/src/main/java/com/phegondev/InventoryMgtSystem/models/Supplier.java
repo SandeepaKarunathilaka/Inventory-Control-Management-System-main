@@ -37,4 +37,6 @@ public class Supplier {
     private String notes;
 
     private String goodsSupplied;
+
+    private Integer quantity;
 }

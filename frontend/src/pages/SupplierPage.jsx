@@ -56,22 +56,21 @@ const SupplierPage = () => {
   const generatePDFReport = () => {
     const doc = new jsPDF('landscape');
     
-    // Title
     doc.setFontSize(18);
     doc.setTextColor(0, 128, 128);
     doc.text("Supplier Directory Report", 14, 20);
     
-    // Date
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 28);
     
-    // Summary
     doc.setFontSize(12);
     doc.setTextColor(0);
     doc.text(`Total Suppliers: ${suppliers.length}`, 14, 36);
+    const totalQty = suppliers.reduce((sum, s) => sum + (s.quantity || 0), 0);
+    doc.text(`Total Stock Capacity: ${totalQty.toLocaleString()} units`, 14, 43);
 
-    const tableColumn = ["ID", "Name", "Company", "Email", "Phone", "Contact Info", "Address", "Goods Supplied"];
+    const tableColumn = ["ID", "Name", "Company", "Email", "Phone", "Address", "Goods Supplied", "Qty"];
     const tableRows = [];
 
     suppliers.forEach(supplier => {
@@ -81,16 +80,16 @@ const SupplierPage = () => {
         supplier.company || "N/A",
         supplier.email || "N/A",
         supplier.phone || "N/A",
-        supplier.contactInfo,
         supplier.address || "N/A",
         supplier.goodsSupplied || "N/A",
+        supplier.quantity || 0,
       ]);
     });
 
     doc.autoTable({
       head: [tableColumn],
       body: tableRows,
-      startY: 42,
+      startY: 48,
       theme: 'grid',
       headStyles: { fillColor: [0, 128, 128] },
       styles: { fontSize: 8 },
@@ -125,6 +124,16 @@ const SupplierPage = () => {
     }));
   };
 
+  // Analytics: Quantity by Supplier
+  const getQuantityData = () => {
+    return suppliers.map(s => ({
+      name: s.name,
+      quantity: s.quantity || 0
+    })).sort((a, b) => b.quantity - a.quantity);
+  };
+
+  const totalQuantity = suppliers.reduce((sum, s) => sum + (s.quantity || 0), 0);
+
   return (
     <Layout>
       {message && <div className="message">{message}</div>}
@@ -149,7 +158,7 @@ const SupplierPage = () => {
         </div>
 
         {/* Summary Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '30px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px', marginBottom: '30px' }}>
           <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', borderLeft: '4px solid #008080' }}>
             <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '5px' }}>Total Suppliers</div>
             <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#008080' }}>{suppliers.length}</div>
@@ -162,48 +171,68 @@ const SupplierPage = () => {
             <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '5px' }}>Goods Categories</div>
             <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#38b2ac' }}>{getGoodsData().length}</div>
           </div>
+          <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', borderLeft: '4px solid #e53e3e' }}>
+            <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '5px' }}>Total Stock Capacity</div>
+            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#e53e3e' }}>{totalQuantity.toLocaleString()}</div>
+          </div>
         </div>
 
         {/* Analytics Charts */}
         {suppliers.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-            {/* Bar Chart - By Location */}
-            <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-              <h3 style={{ color: '#2d3748', marginBottom: '15px', textAlign: 'center', fontSize: '1rem' }}>Suppliers by Location</h3>
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+              {/* Bar Chart - By Location */}
+              <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+                <h3 style={{ color: '#2d3748', marginBottom: '15px', textAlign: 'center', fontSize: '1rem' }}>Suppliers by Location</h3>
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={getLocationData()}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="location" tick={{ fontSize: 11 }} />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip />
+                    <Bar dataKey="count" fill="#008080" name="Suppliers" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Pie Chart - By Goods */}
+              <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+                <h3 style={{ color: '#2d3748', marginBottom: '15px', textAlign: 'center', fontSize: '1rem' }}>Suppliers by Goods Supplied</h3>
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={getGoodsData()}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={true}
+                      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                      outerRadius={80}
+                      dataKey="value"
+                    >
+                      {getGoodsData().map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Quantity Bar Chart */}
+            <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', marginBottom: '30px' }}>
+              <h3 style={{ color: '#2d3748', marginBottom: '15px', textAlign: 'center', fontSize: '1rem' }}>Stock Capacity by Supplier</h3>
               <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={getLocationData()}>
+                <BarChart data={getQuantityData()}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="location" tick={{ fontSize: 12 }} />
-                  <YAxis allowDecimals={false} />
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-20} textAnchor="end" height={60} />
+                  <YAxis />
                   <Tooltip />
-                  <Bar dataKey="count" fill="#008080" name="Suppliers" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="quantity" fill="#38b2ac" name="Quantity" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
-
-            {/* Pie Chart - By Goods */}
-            <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-              <h3 style={{ color: '#2d3748', marginBottom: '15px', textAlign: 'center', fontSize: '1rem' }}>Suppliers by Goods Supplied</h3>
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={getGoodsData()}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={true}
-                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                    outerRadius={80}
-                    dataKey="value"
-                  >
-                    {getGoodsData().map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+          </>
         )}
 
         {/* Supplier Table */}
@@ -211,41 +240,43 @@ const SupplierPage = () => {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ backgroundColor: '#008080', color: 'white' }}>
-                <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.85rem' }}>Name</th>
-                <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.85rem' }}>Company</th>
-                <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.85rem' }}>Email</th>
-                <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.85rem' }}>Phone</th>
-                <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.85rem' }}>Location</th>
-                <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.85rem' }}>Goods Supplied</th>
-                <th style={{ padding: '14px 16px', textAlign: 'center', fontSize: '0.85rem' }}>Actions</th>
+                <th style={{ padding: '14px 12px', textAlign: 'left', fontSize: '0.8rem' }}>Name</th>
+                <th style={{ padding: '14px 12px', textAlign: 'left', fontSize: '0.8rem' }}>Company</th>
+                <th style={{ padding: '14px 12px', textAlign: 'left', fontSize: '0.8rem' }}>Email</th>
+                <th style={{ padding: '14px 12px', textAlign: 'left', fontSize: '0.8rem' }}>Phone</th>
+                <th style={{ padding: '14px 12px', textAlign: 'left', fontSize: '0.8rem' }}>Location</th>
+                <th style={{ padding: '14px 12px', textAlign: 'left', fontSize: '0.8rem' }}>Goods</th>
+                <th style={{ padding: '14px 12px', textAlign: 'right', fontSize: '0.8rem' }}>Qty</th>
+                <th style={{ padding: '14px 12px', textAlign: 'center', fontSize: '0.8rem' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {suppliers.length === 0 ? (
                 <tr>
-                  <td colSpan="7" style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
-                    No suppliers found. Click "Add Supplier" to get started.
+                  <td colSpan="8" style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
+                    No suppliers found. Click "+ Add Supplier" to get started.
                   </td>
                 </tr>
               ) : (
                 suppliers.map((supplier, index) => (
                   <tr key={supplier.id} style={{ backgroundColor: index % 2 === 0 ? '#f9fafb' : 'white', borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: '12px 16px', fontWeight: '600', color: '#2d3748' }}>{supplier.name}</td>
-                    <td style={{ padding: '12px 16px', color: '#555' }}>{supplier.company || "—"}</td>
-                    <td style={{ padding: '12px 16px', color: '#555' }}>{supplier.email || "—"}</td>
-                    <td style={{ padding: '12px 16px', color: '#555' }}>{supplier.phone || "—"}</td>
-                    <td style={{ padding: '12px 16px', color: '#555' }}>{supplier.address || "—"}</td>
-                    <td style={{ padding: '12px 16px', color: '#555' }}>{supplier.goodsSupplied || "—"}</td>
-                    <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                    <td style={{ padding: '12px', fontWeight: '600', color: '#2d3748' }}>{supplier.name}</td>
+                    <td style={{ padding: '12px', color: '#555' }}>{supplier.company || "—"}</td>
+                    <td style={{ padding: '12px', color: '#555', fontSize: '0.85rem' }}>{supplier.email || "—"}</td>
+                    <td style={{ padding: '12px', color: '#555', fontSize: '0.85rem' }}>{supplier.phone || "—"}</td>
+                    <td style={{ padding: '12px', color: '#555' }}>{supplier.address || "—"}</td>
+                    <td style={{ padding: '12px', color: '#555' }}>{supplier.goodsSupplied || "—"}</td>
+                    <td style={{ padding: '12px', color: '#2d3748', fontWeight: '600', textAlign: 'right' }}>{supplier.quantity || 0}</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>
                       <button
                         onClick={() => navigate(`/edit-supplier/${supplier.id}`)}
-                        style={{ backgroundColor: '#008080', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '4px', cursor: 'pointer', marginRight: '8px', fontSize: '13px' }}
+                        style={{ backgroundColor: '#008080', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', marginRight: '6px', fontSize: '12px' }}
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => handleDeleteSupplier(supplier.id)}
-                        style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}
+                        style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
                       >
                         Delete
                       </button>

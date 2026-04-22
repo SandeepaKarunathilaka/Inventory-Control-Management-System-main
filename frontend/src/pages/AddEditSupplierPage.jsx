@@ -13,6 +13,7 @@ const AddEditSupplierPage = () => {
   const [company, setCompany] = useState("");
   const [notes, setNotes] = useState("");
   const [goodsSupplied, setGoodsSupplied] = useState("");
+  const [quantity, setQuantity] = useState("");
   const [message, setMessage] = useState("");
   const [isEditing, setIsEditing] = useState(false);
 
@@ -34,6 +35,7 @@ const AddEditSupplierPage = () => {
             setCompany(supplierData.supplier.company || "");
             setNotes(supplierData.supplier.notes || "");
             setGoodsSupplied(supplierData.supplier.goodsSupplied || "");
+            setQuantity(supplierData.supplier.quantity || "");
           }
         } catch (error) {
           showMessage(
@@ -46,10 +48,9 @@ const AddEditSupplierPage = () => {
     }
   }, [supplierId]);
 
-  //handle form submission for both add and edit supplier
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const supplierData = { name, contactInfo, address, email, phone, company, notes, goodsSupplied };
+    const supplierData = { name, contactInfo, address, email, phone, company, notes, goodsSupplied, quantity: quantity ? parseInt(quantity) : null };
 
     try {
       if (isEditing) {
@@ -69,7 +70,6 @@ const AddEditSupplierPage = () => {
     }
   };
 
-  //method to show message or errors
   const showMessage = (msg) => {
     setMessage(msg);
     setTimeout(() => {
@@ -154,6 +154,17 @@ const AddEditSupplierPage = () => {
               onChange={(e) => setGoodsSupplied(e.target.value)}
               type="text"
               placeholder="e.g. Electronics, Cables, Raw Materials"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Quantity (Stock Capacity)</label>
+            <input
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              type="number"
+              min="0"
+              placeholder="e.g. 500"
             />
           </div>
 

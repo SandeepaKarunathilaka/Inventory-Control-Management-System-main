@@ -33,4 +33,6 @@ public class SupplierDTO {
     private String notes;
 
     private String goodsSupplied;
+
+    private Integer quantity;
 }
