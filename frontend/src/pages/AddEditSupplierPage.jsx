@@ -8,6 +8,11 @@ const AddEditSupplierPage = () => {
   const [name, setName] = useState("");
   const [contactInfo, setContactInfo] = useState("");
   const [address, setAddress] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [company, setCompany] = useState("");
+  const [notes, setNotes] = useState("");
+  const [goodsSupplied, setGoodsSupplied] = useState("");
   const [message, setMessage] = useState("");
   const [isEditing, setIsEditing] = useState(false);
 
@@ -24,11 +29,16 @@ const AddEditSupplierPage = () => {
             setName(supplierData.supplier.name);
             setContactInfo(supplierData.supplier.contactInfo);
             setAddress(supplierData.supplier.address);
+            setEmail(supplierData.supplier.email || "");
+            setPhone(supplierData.supplier.phone || "");
+            setCompany(supplierData.supplier.company || "");
+            setNotes(supplierData.supplier.notes || "");
+            setGoodsSupplied(supplierData.supplier.goodsSupplied || "");
           }
         } catch (error) {
           showMessage(
             error.response?.data?.message ||
-              "Error Getting a SUpplier by Id: " + error
+              "Error Getting a Supplier by Id: " + error
           );
         }
       };
@@ -39,7 +49,7 @@ const AddEditSupplierPage = () => {
   //handle form submission for both add and edit supplier
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const supplierData = { name, contactInfo, address };
+    const supplierData = { name, contactInfo, address, email, phone, company, notes, goodsSupplied };
 
     try {
       if (isEditing) {
@@ -54,12 +64,12 @@ const AddEditSupplierPage = () => {
     } catch (error) {
       showMessage(
         error.response?.data?.message ||
-          "Error Getting a SUpplier by Id: " + error
+          "Error saving Supplier: " + error
       );
     }
   };
 
-  //metjhod to show message or errors
+  //method to show message or errors
   const showMessage = (msg) => {
     setMessage(msg);
     setTimeout(() => {
@@ -75,36 +85,91 @@ const AddEditSupplierPage = () => {
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Supplier Name</label>
+            <label>Supplier Name *</label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
               type="text"
+              placeholder="e.g. John Doe"
             />
           </div>
 
           <div className="form-group">
-            <label>Contact Info</label>
+            <label>Company</label>
+            <input
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              type="text"
+              placeholder="e.g. ABC Supplies Ltd."
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Email</label>
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              type="email"
+              placeholder="e.g. supplier@example.com"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Phone</label>
+            <input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              type="tel"
+              placeholder="e.g. +94 77 123 4567"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Contact Info *</label>
             <input
               value={contactInfo}
               onChange={(e) => setContactInfo(e.target.value)}
               required
               type="text"
+              placeholder="e.g. Main warehouse contact"
             />
           </div>
 
           <div className="form-group">
-            <label>Address</label>
+            <label>Address *</label>
             <input
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               required
               type="text"
+              placeholder="e.g. 123 Main St, Colombo"
             />
           </div>
+
+          <div className="form-group">
+            <label>Goods Supplied</label>
+            <input
+              value={goodsSupplied}
+              onChange={(e) => setGoodsSupplied(e.target.value)}
+              type="text"
+              placeholder="e.g. Electronics, Cables, Raw Materials"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Notes / Remarks</label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Any special instructions, payment terms, delivery schedule, etc."
+              rows="4"
+              style={{ width: '100%', padding: '10px', fontSize: '1rem', border: '1px solid #ccc', borderRadius: '5px', resize: 'vertical' }}
+            />
+          </div>
+
           <button type="submit">
-            {isEditing ? "Edit Supplier" : "Add Supplier"}
+            {isEditing ? "Update Supplier" : "Add Supplier"}
           </button>
         </form>
       </div>

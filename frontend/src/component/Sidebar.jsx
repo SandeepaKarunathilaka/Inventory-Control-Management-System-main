@@ -26,7 +26,7 @@ const Sidebar = () => {
           </li>
         )}
 
-        {isAdmin && (
+        {isAuth && (
           <li>
             <Link to="/category">Category</Link>
           </li>
@@ -38,7 +38,7 @@ const Sidebar = () => {
           </li>
         )}
 
-        {isAdmin && (
+        {isAuth && (
           <li>
             <Link to="/supplier">Supplier</Link>
           </li>
@@ -53,6 +53,18 @@ const Sidebar = () => {
         {isAuth && (
           <li>
             <Link to="/sell">Sell</Link>
+          </li>
+        )}
+
+        {isAuth && (
+          <li>
+            <Link to="/warehouse">Warehouse</Link>
+          </li>
+        )}
+
+        {isAuth && (
+          <li>
+            <Link to="/stock-locations">Stock Locations</Link>
           </li>
         )}
 

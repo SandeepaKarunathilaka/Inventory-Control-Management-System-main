@@ -25,9 +25,9 @@ function App() {
 
         {/* ADMIN ROUTES */}
         <Route path="/category" element={<AdminRoute element={<CategoryPage/>}/>}/>
-        <Route path="/supplier" element={<AdminRoute element={<SupplierPage/>}/>}/>
-        <Route path="/add-supplier" element={<AdminRoute element={<AddEditSupplierPage/>}/>}/>
-        <Route path="/edit-supplier/:supplierId" element={<AdminRoute element={<AddEditSupplierPage/>}/>}/>
+        <Route path="/supplier" element={<ProtectedRoute element={<SupplierPage/>}/>}/>
+        <Route path="/add-supplier" element={<ProtectedRoute element={<AddEditSupplierPage/>}/>}/>
+        <Route path="/edit-supplier/:supplierId" element={<ProtectedRoute element={<AddEditSupplierPage/>}/>}/>
         <Route path="/product" element={<AdminRoute element={<ProductPage/>}/>}/>
 
 

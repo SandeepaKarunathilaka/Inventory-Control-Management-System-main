@@ -26,4 +26,15 @@ public class Supplier {
     private String contactInfo;
 
     private String address;
+
+    private String email;
+
+    private String phone;
+
+    private String company;
+
+    @Column(length = 1000)
+    private String notes;
+
+    private String goodsSupplied;
 }
