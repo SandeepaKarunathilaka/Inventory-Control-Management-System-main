@@ -1,6 +1,5 @@
 package com.phegondev.InventoryMgtSystem.controllers;
 
-import com.phegondev.InventoryMgtSystem.dtos.AdminResetPasswordRequest;
 import com.phegondev.InventoryMgtSystem.dtos.Response;
 import com.phegondev.InventoryMgtSystem.dtos.UserDTO;
 import com.phegondev.InventoryMgtSystem.models.User;
@@ -49,12 +48,4 @@ public class UserController {
         return ResponseEntity.ok(userService.getCurrentLoggedInUser());
     }
 
-    @PutMapping("/admin-reset-password/{userId}")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<Response> adminResetPassword(
-            @PathVariable Long userId,
-            @RequestBody AdminResetPasswordRequest request
-    ) {
-        return ResponseEntity.ok(userService.adminResetPassword(userId, request));
-    }
 }
