@@ -15,11 +15,6 @@ const RegisterPage = () => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const passwordRegex =
     /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_\-+={[}\]|\\:;"'<>,.?/~`]).{8,}$/;
-
-  // Valid Sri Lankan mobile numbers only:
-  // +947XXXXXXXX
-  // 07XXXXXXXX
-  // 7XXXXXXXX
   const sriLankanMobileRegex = /^(?:\+94|0)?7[01245678]\d{7}$/;
 
   const showMessage = (msg) => {
@@ -30,13 +25,28 @@ const RegisterPage = () => {
   };
 
   const validateRegisterForm = () => {
+    if (!name.trim()) {
+      setFieldError("Name is required.");
+      return false;
+    }
+
     if (name.trim().length < 4) {
       setFieldError("Name must be more than 3 characters.");
       return false;
     }
 
+    if (!email.trim()) {
+      setFieldError("Email is required.");
+      return false;
+    }
+
     if (!emailRegex.test(email.trim())) {
       setFieldError("Please enter a valid email address with @.");
+      return false;
+    }
+
+    if (!password.trim()) {
+      setFieldError("Password is required.");
       return false;
     }
 
@@ -47,9 +57,14 @@ const RegisterPage = () => {
       return false;
     }
 
+    if (!phoneNumber.trim()) {
+      setFieldError("Phone number is required.");
+      return false;
+    }
+
     if (!sriLankanMobileRegex.test(phoneNumber.trim())) {
       setFieldError(
-        "Enter a valid Sri Lankan mobile number: +94XXXXXXXXX, 0XXXXXXXXX, or 7XXXXXXXX."
+        "Enter a valid Sri Lankan mobile number: +947XXXXXXXX, 07XXXXXXXX, or 7XXXXXXXX."
       );
       return false;
     }
@@ -61,9 +76,7 @@ const RegisterPage = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    if (!validateRegisterForm()) {
-      return;
-    }
+    if (!validateRegisterForm()) return;
 
     try {
       const registerData = {
@@ -97,37 +110,61 @@ const RegisterPage = () => {
         {fieldError && <p className="error-message">{fieldError}</p>}
 
         <form onSubmit={handleRegister} noValidate>
-          <input
-            type="text"
-            placeholder="Full Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
+          <div className="form-group-auth">
+            <label htmlFor="register-name">
+              Full Name <span className="required-star">*</span>
+            </label>
+            <input
+              id="register-name"
+              type="text"
+              placeholder="Enter your full name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
 
-          <input
-            type="email"
-            placeholder="Email Address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+          <div className="form-group-auth">
+            <label htmlFor="register-email">
+              Email Address <span className="required-star">*</span>
+            </label>
+            <input
+              id="register-email"
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
 
-          <input
-            type="password"
-            placeholder="Strong Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <div className="form-group-auth">
+            <label htmlFor="register-password">
+              Password <span className="required-star">*</span>
+            </label>
+            <input
+              id="register-password"
+              type="password"
+              placeholder="Enter a strong password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
 
-          <input
-            type="text"
-            placeholder="Phone Number"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            required
-          />
+          <div className="form-group-auth">
+            <label htmlFor="register-phone">
+              Phone Number <span className="required-star">*</span>
+            </label>
+            <input
+              id="register-phone"
+              type="text"
+              placeholder="Enter your phone number"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              required
+            />
+          </div>
 
           <p className="input-hint">
             Accepted formats: +947XXXXXXXX, 07XXXXXXXX, 7XXXXXXXX

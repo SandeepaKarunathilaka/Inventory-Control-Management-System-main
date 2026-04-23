@@ -20,6 +20,11 @@ const LoginPage = () => {
   };
 
   const validateLoginForm = () => {
+    if (!email.trim()) {
+      setFieldError("Email is required.");
+      return false;
+    }
+
     if (!emailRegex.test(email.trim())) {
       setFieldError("Please enter a valid email address with @.");
       return false;
@@ -37,9 +42,7 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    if (!validateLoginForm()) {
-      return;
-    }
+    if (!validateLoginForm()) return;
 
     try {
       const loginData = {
@@ -48,8 +51,6 @@ const LoginPage = () => {
       };
 
       const res = await ApiService.loginUser(loginData);
-
-      console.log(res);
 
       if (res.status === 200) {
         ApiService.saveToken(res.token);
@@ -65,10 +66,6 @@ const LoginPage = () => {
     }
   };
 
-  const handleForgotPassword = () => {
-    showMessage("Forgot password feature will be added next.");
-  };
-
   return (
     <div className="auth-page">
       <div className="auth-container glass-card">
@@ -82,30 +79,38 @@ const LoginPage = () => {
         {fieldError && <p className="error-message">{fieldError}</p>}
 
         <form onSubmit={handleLogin} noValidate>
-          <input
-            type="email"
-            placeholder="Email Address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+          <div className="form-group-auth">
+            <label htmlFor="login-email">
+              Email Address <span className="required-star">*</span>
+            </label>
+            <input
+              id="login-email"
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
 
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <div className="form-group-auth">
+            <label htmlFor="login-password">
+              Password <span className="required-star">*</span>
+            </label>
+            <input
+              id="login-password"
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
 
           <div className="forgot-password-wrap">
-            <button
-              type="button"
-              className="forgot-password-btn"
-              onClick={handleForgotPassword}
-            >
+            <Link to="/forgot-password" className="forgot-password-link">
               Forgot Password?
-            </button>
+            </Link>
           </div>
 
           <button type="submit">Login</button>

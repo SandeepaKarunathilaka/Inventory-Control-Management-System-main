@@ -1,16 +1,11 @@
 package com.phegondev.InventoryMgtSystem.controllers;
 
-import com.phegondev.InventoryMgtSystem.dtos.LoginRequest;
-import com.phegondev.InventoryMgtSystem.dtos.RegisterRequest;
-import com.phegondev.InventoryMgtSystem.dtos.Response;
+import com.phegondev.InventoryMgtSystem.dtos.*;
 import com.phegondev.InventoryMgtSystem.services.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -29,4 +24,18 @@ public class AuthController {
         return ResponseEntity.ok(userService.loginUser(loginRequest));
     }
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Response> forgotPassword(@RequestBody @Valid ForgotPasswordRequest request) {
+        return ResponseEntity.ok(userService.sendForgotPasswordOtp(request));
+    }
+
+    @PostMapping("/verify-reset-otp")
+    public ResponseEntity<Response> verifyResetOtp(@RequestBody @Valid VerifyOtpRequest request) {
+        return ResponseEntity.ok(userService.verifyForgotPasswordOtp(request));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Response> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
+        return ResponseEntity.ok(userService.resetPassword(request));
+    }
 }

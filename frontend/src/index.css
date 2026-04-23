@@ -194,6 +194,35 @@ body {
   }
 }
 
+.form-group-auth {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group-auth label {
+  font-size: 0.96rem;
+  font-weight: 600;
+  color: #234444;
+  text-align: left;
+}
+
+.required-star {
+  color: #dc3545;
+  font-weight: 700;
+}
+
+.forgot-password-link {
+  color: #008080;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.forgot-password-link:hover {
+  text-decoration: underline;
+  color: #065f5f;
+}
+
 
 
 
