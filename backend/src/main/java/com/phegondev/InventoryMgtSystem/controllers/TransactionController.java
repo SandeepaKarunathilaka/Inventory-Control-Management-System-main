@@ -17,9 +17,9 @@ public class TransactionController {
 
     private final TransactionService transactionService;
 
-    @PostMapping("/purchase")
-    public ResponseEntity<Response> purchaseInventory(@RequestBody @Valid TransactionRequest transactionRequest) {
-        return ResponseEntity.ok(transactionService.purchase(transactionRequest));
+    @PostMapping("/stock-in")
+    public ResponseEntity<Response> stockInInventory(@RequestBody @Valid TransactionRequest transactionRequest) {
+        return ResponseEntity.ok(transactionService.stockIn(transactionRequest));
     }
 
     @PostMapping("/sell")

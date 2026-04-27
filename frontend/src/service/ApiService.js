@@ -255,8 +255,8 @@ export default class ApiService {
 
 
     /**Transactions EDNPOINTS */
-    static async purchaseProduct(body) {
-        const response = await axios.post(`${this.BASE_URL}/transactions/purchase`, body, {
+    static async stockInProduct(body) {
+        const response = await axios.post(`${this.BASE_URL}/transactions/stock-in`, body, {
             headers: this.getHeader()
         })
         return response.data;

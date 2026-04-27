@@ -5,7 +5,7 @@ import com.phegondev.InventoryMgtSystem.dtos.TransactionRequest;
 import com.phegondev.InventoryMgtSystem.enums.TransactionStatus;
 
 public interface TransactionService {
-    Response purchase(TransactionRequest transactionRequest);
+    Response stockIn(TransactionRequest transactionRequest);
 
     Response sell(TransactionRequest transactionRequest);
 

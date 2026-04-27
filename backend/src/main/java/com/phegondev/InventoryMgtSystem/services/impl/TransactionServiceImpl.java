@@ -45,7 +45,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final ModelMapper modelMapper;
 
     @Override
-    public Response purchase(TransactionRequest transactionRequest) {
+    public Response stockIn(TransactionRequest transactionRequest) {
 
         Long productId = transactionRequest.getProductId();
         Long supplierId = transactionRequest.getSupplierId();
@@ -67,7 +67,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         //create a transaction
         Transaction transaction = Transaction.builder()
-                .transactionType(TransactionType.PURCHASE)
+                .transactionType(TransactionType.STOCK_IN)
                 .status(TransactionStatus.COMPLETED)
                 .product(product)
                 .user(user)
@@ -81,7 +81,7 @@ public class TransactionServiceImpl implements TransactionService {
         transactionRepository.save(transaction);
         return Response.builder()
                 .status(200)
-                .message("Purchase Made successfully")
+                .message("Stock-in recorded successfully")
                 .build();
 
     }
