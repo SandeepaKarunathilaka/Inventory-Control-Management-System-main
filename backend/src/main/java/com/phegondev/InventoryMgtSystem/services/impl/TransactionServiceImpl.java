@@ -87,7 +87,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public Response sell(TransactionRequest transactionRequest) {
+    public Response stockOut(TransactionRequest transactionRequest) {
 
         Long productId = transactionRequest.getProductId();
         Integer quantity = transactionRequest.getQuantity();
@@ -97,6 +97,10 @@ public class TransactionServiceImpl implements TransactionService {
 
         User user = userService.getCurrentLoggedInUser();
 
+        if (product.getStockQuantity() < quantity) {
+            throw new NameValueRequiredException("Insufficient stock available");
+        }
+
         //update the stock quantity and re-save
         product.setStockQuantity(product.getStockQuantity() - quantity);
         productRepository.save(product);
@@ -104,7 +108,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         //create a transaction
         Transaction transaction = Transaction.builder()
-                .transactionType(TransactionType.SALE)
+                .transactionType(TransactionType.STOCK_OUT)
                 .status(TransactionStatus.COMPLETED)
                 .product(product)
                 .user(user)
@@ -117,7 +121,7 @@ public class TransactionServiceImpl implements TransactionService {
         transactionRepository.save(transaction);
         return Response.builder()
                 .status(200)
-                .message("Product Sale successfully made")
+                .message("Stock-out recorded successfully")
                 .build();
 
 

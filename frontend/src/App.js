@@ -9,7 +9,7 @@ import AddEditSupplierPage from "./pages/AddEditSupplierPage";
 import ProductPage from "./pages/ProductPage";
 import AddEditProductPage from "./pages/AddEditProductPage";
 import StockInPage from "./pages/StockInPage";
-import SellPage from "./pages/SellPage";
+import StockOutPage from "./pages/StockOutPage";
 import TransactionsPage from "./pages/TransactionsPage";
 import TransactionDetailsPage from "./pages/TransactionDetailsPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -36,7 +36,7 @@ function App() {
 
           {/* ADMIN AND MANAGERS ROUTES */}
         <Route path="/stock-in" element={<ProtectedRoute element={<StockInPage/>}/>}/>
-        <Route path="/sell" element={<ProtectedRoute element={<SellPage/>}/>}/>
+        <Route path="/stock-out" element={<ProtectedRoute element={<StockOutPage/>}/>}/>
         <Route path="/transaction" element={<ProtectedRoute element={<TransactionsPage/>}/>}/>
         <Route path="/transaction/:transactionId" element={<ProtectedRoute element={<TransactionDetailsPage/>}/>}/>
 

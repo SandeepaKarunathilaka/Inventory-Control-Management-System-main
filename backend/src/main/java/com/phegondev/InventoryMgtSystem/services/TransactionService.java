@@ -7,7 +7,7 @@ import com.phegondev.InventoryMgtSystem.enums.TransactionStatus;
 public interface TransactionService {
     Response stockIn(TransactionRequest transactionRequest);
 
-    Response sell(TransactionRequest transactionRequest);
+    Response stockOut(TransactionRequest transactionRequest);
 
     Response returnToSupplier(TransactionRequest transactionRequest);
 

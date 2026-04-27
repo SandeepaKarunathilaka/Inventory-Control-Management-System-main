@@ -22,9 +22,9 @@ public class TransactionController {
         return ResponseEntity.ok(transactionService.stockIn(transactionRequest));
     }
 
-    @PostMapping("/sell")
-    public ResponseEntity<Response> makeSale(@RequestBody @Valid TransactionRequest transactionRequest) {
-        return ResponseEntity.ok(transactionService.sell(transactionRequest));
+    @PostMapping("/stock-out")
+    public ResponseEntity<Response> stockOutInventory(@RequestBody @Valid TransactionRequest transactionRequest) {
+        return ResponseEntity.ok(transactionService.stockOut(transactionRequest));
     }
 
     @PostMapping("/return")

@@ -262,8 +262,8 @@ export default class ApiService {
         return response.data;
     }
 
-    static async sellProduct(body) {
-        const response = await axios.post(`${this.BASE_URL}/transactions/sell`, body, {
+    static async stockOutProduct(body) {
+        const response = await axios.post(`${this.BASE_URL}/transactions/stock-out`, body, {
             headers: this.getHeader()
         })
         return response.data;
