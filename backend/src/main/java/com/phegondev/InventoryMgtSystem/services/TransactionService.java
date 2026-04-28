@@ -18,4 +18,8 @@ public interface TransactionService {
     Response getAllTransactionByMonthAndYear(int month, int year);
 
     Response updateTransactionStatus(Long transactionId, TransactionStatus status);
+
+    Response updateTransaction(Long id, TransactionRequest transactionRequest);
+
+    Response deleteTransaction(Long id);
 }

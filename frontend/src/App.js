@@ -12,6 +12,8 @@ import StockInPage from "./pages/StockInPage";
 import StockOutPage from "./pages/StockOutPage";
 import TransactionsPage from "./pages/TransactionsPage";
 import TransactionDetailsPage from "./pages/TransactionDetailsPage";
+import UpdateTransactionPage from "./pages/UpdateTransactionPage";
+
 import ProfilePage from "./pages/ProfilePage";
 import DashboardPage from "./pages/DashboardPage";
 
@@ -39,6 +41,7 @@ function App() {
         <Route path="/stock-out" element={<ProtectedRoute element={<StockOutPage/>}/>}/>
         <Route path="/transaction" element={<ProtectedRoute element={<TransactionsPage/>}/>}/>
         <Route path="/transaction/:transactionId" element={<ProtectedRoute element={<TransactionDetailsPage/>}/>}/>
+        <Route path="/update-transaction/:transactionId" element={<ProtectedRoute element={<UpdateTransactionPage/>}/>}/>
 
         <Route path="/profile" element={<ProtectedRoute element={<ProfilePage/>}/>}/>
         <Route path="/dashboard" element={<ProtectedRoute element={<DashboardPage/>}/>}/>

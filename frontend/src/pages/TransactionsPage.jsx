@@ -66,6 +66,21 @@ const TransactionsPage = () => {
     navigate(`/transaction/${transactionId}`);
   }
 
+  //Handle Delete Transaction
+  const handleDeleteTransaction = async (transactionId) => {
+    if (window.confirm("Are you sure you want to delete this transaction? This will reverse the stock changes.")) {
+      try {
+        const response = await ApiService.deleteTransaction(transactionId);
+        if (response.status === 200) {
+          showMessage(response.message || "Transaction deleted successfully.");
+          setTransactions((prevTransactions) => prevTransactions.filter((t) => t.id !== transactionId));
+        }
+      } catch (error) {
+        showMessage(error.response?.data?.message || "Error deleting transaction: " + error);
+      }
+    }
+  };
+
   return (
     <Layout>
 
@@ -106,7 +121,8 @@ const TransactionsPage = () => {
                             <td>{new Date(transaction.createdAt).toLocaleString()}</td>
 
                             <td>
-                                <button onClick={()=> navigateToTransactionDetailsPage(transaction.id)}>View Details</button>
+                                <button className="secondary-btn" style={{ marginRight: '8px' }} onClick={()=> navigateToTransactionDetailsPage(transaction.id)}>View Details</button>
+                                <button className="btn-red-outline" onClick={()=> handleDeleteTransaction(transaction.id)}>Delete</button>
                             </td>
                         </tr>
                     ))}

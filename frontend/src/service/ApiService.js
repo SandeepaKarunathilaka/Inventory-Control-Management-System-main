@@ -311,6 +311,19 @@ export default class ApiService {
         return response.data;
     }
 
+    static async updateTransaction(transactionId, body) {
+        const response = await axios.put(`${this.BASE_URL}/transactions/update/${transactionId}`, body, {
+            headers: this.getHeader()
+        })
+        return response.data;
+    }
+
+    static async deleteTransaction(transactionId) {
+        const response = await axios.delete(`${this.BASE_URL}/transactions/delete/${transactionId}`, {
+            headers: this.getHeader()
+        })
+        return response.data;
+    }
 
     /**AUTHENTICATION CHECKER */
     static logout(){

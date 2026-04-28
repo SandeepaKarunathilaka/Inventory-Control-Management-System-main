@@ -1426,4 +1426,21 @@ button:hover {
     background: #9b2c2c !important;
     box-shadow: 0 4px 12px rgba(197, 48, 48, 0.2) !important;
 }
+
+.btn-red-outline {
+    background: transparent;
+    color: #e53e3e;
+    border: 1px solid #e53e3e;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-red-outline:hover {
+    background: #fff5f5;
+    color: #c53030;
+    border-color: #c53030;
+}
 }
