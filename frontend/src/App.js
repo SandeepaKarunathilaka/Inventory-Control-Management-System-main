@@ -13,6 +13,8 @@ import StockOutPage from "./pages/StockOutPage";
 import TransactionsPage from "./pages/TransactionsPage";
 import TransactionDetailsPage from "./pages/TransactionDetailsPage";
 import UpdateTransactionPage from "./pages/UpdateTransactionPage";
+import TransactionReportPage from "./pages/TransactionReportPage";
+
 
 import ProfilePage from "./pages/ProfilePage";
 import DashboardPage from "./pages/DashboardPage";
@@ -42,6 +44,8 @@ function App() {
         <Route path="/transaction" element={<ProtectedRoute element={<TransactionsPage/>}/>}/>
         <Route path="/transaction/:transactionId" element={<ProtectedRoute element={<TransactionDetailsPage/>}/>}/>
         <Route path="/update-transaction/:transactionId" element={<ProtectedRoute element={<UpdateTransactionPage/>}/>}/>
+        <Route path="/report" element={<ProtectedRoute element={<TransactionReportPage/>}/>}/>
+
 
         <Route path="/profile" element={<ProtectedRoute element={<ProfilePage/>}/>}/>
         <Route path="/dashboard" element={<ProtectedRoute element={<DashboardPage/>}/>}/>

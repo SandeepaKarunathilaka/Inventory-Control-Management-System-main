@@ -325,6 +325,19 @@ export default class ApiService {
         return response.data;
     }
 
+    static async getTransactionReport(startDate, endDate) {
+        let url = `${this.BASE_URL}/transactions/report`;
+        const params = new URLSearchParams();
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+        if (params.toString()) url += `?${params.toString()}`;
+
+        const response = await axios.get(url, {
+            headers: this.getHeader()
+        })
+        return response.data;
+    }
+
     /**AUTHENTICATION CHECKER */
     static logout(){
         this.clearAuth()

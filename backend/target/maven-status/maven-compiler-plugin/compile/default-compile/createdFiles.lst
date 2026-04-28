@@ -24,6 +24,7 @@ com\phegondev\InventoryMgtSystem\security\CustomUserDetailsService.class
 com\phegondev\InventoryMgtSystem\exceptions\NameValueRequiredException.class
 com\phegondev\InventoryMgtSystem\models\Supplier$SupplierBuilder.class
 com\phegondev\InventoryMgtSystem\services\impl\CategoryServiceImpl$1.class
+com\phegondev\InventoryMgtSystem\services\impl\TransactionServiceImpl$3.class
 com\phegondev\InventoryMgtSystem\specification\TransactionFilter.class
 com\phegondev\InventoryMgtSystem\config\ModelMapperConfig.class
 com\phegondev\InventoryMgtSystem\InventoryMgtSystemApplication.class

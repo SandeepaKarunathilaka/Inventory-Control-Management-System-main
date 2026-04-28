@@ -43,6 +43,13 @@ public class TransactionController {
     }
 
 
+    @GetMapping("/report")
+    public ResponseEntity<Response> getTransactionReport(
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate) {
+        return ResponseEntity.ok(transactionService.getTransactionReport(startDate, endDate));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Response> getTransactionById(@PathVariable Long id) {
         return ResponseEntity.ok(transactionService.getAllTransactionById(id));
@@ -55,6 +62,8 @@ public class TransactionController {
 
         return ResponseEntity.ok(transactionService.getAllTransactionByMonthAndYear(month, year));
     }
+
+
 
     @PutMapping("/update/{id}")
     public ResponseEntity<Response> updateTransaction(

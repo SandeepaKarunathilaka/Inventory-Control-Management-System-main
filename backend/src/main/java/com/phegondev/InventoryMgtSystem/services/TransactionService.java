@@ -22,4 +22,6 @@ public interface TransactionService {
     Response updateTransaction(Long id, TransactionRequest transactionRequest);
 
     Response deleteTransaction(Long id);
+
+    Response getTransactionReport(String startDate, String endDate);
 }

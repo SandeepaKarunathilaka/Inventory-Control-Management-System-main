@@ -325,4 +325,30 @@ public class TransactionServiceImpl implements TransactionService {
                 .build();
     }
 
+    @Override
+    public Response getTransactionReport(String startDate, String endDate) {
+        Specification<Transaction> spec = Specification.where(null);
+        
+        if (startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty()) {
+            LocalDateTime start = LocalDateTime.parse(startDate + "T00:00:00");
+            LocalDateTime end = LocalDateTime.parse(endDate + "T23:59:59");
+            spec = TransactionFilter.byDateRange(start, end);
+        }
+
+        List<Transaction> transactions = transactionRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "id"));
+
+        List<TransactionDTO> transactionDTOS = modelMapper.map(transactions, new TypeToken<List<TransactionDTO>>() {
+        }.getType());
+
+        transactionDTOS.forEach(dto -> {
+            if (dto.getUser() != null) dto.getUser().setTransactions(null);
+        });
+
+        return Response.builder()
+                .status(200)
+                .message("Report generated successfully")
+                .transactions(transactionDTOS)
+                .build();
+    }
+
 }
