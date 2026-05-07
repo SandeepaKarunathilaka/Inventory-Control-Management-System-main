@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ApiService from "../service/ApiService";
+import Layout from "../component/Layout";
 import "../styles/UserManagementPage.css";
 
 function UserManagementPage() {
@@ -103,131 +104,133 @@ function UserManagementPage() {
   };
 
   return (
-    <div className="user-management-container">
-      <h1 className="user-management-title">User Management</h1>
+    <Layout>
+      <div className="user-management-container">
+        <h1 className="user-management-title">User Management</h1>
 
-      {message && (
-        <div className="success-message">
-          {message}
-        </div>
-      )}
-
-      {/* CREATE USER */}
-      <div className="glass-card">
-        <h2 className="section-title">Create User</h2>
-
-        <form onSubmit={handleCreateUser} autoComplete="off">
-          <div className="user-form-grid">
-            <input
-              type="text"
-              name="fullName"
-              autoComplete="off"
-              placeholder="Full Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="user-input"
-            />
-
-            <input
-              type="email"
-              name="emailAddress"
-              autoComplete="new-email"
-              placeholder="Email Address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="user-input"
-            />
-
-            <input
-              type="password"
-              name="newPassword"
-              autoComplete="new-password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="user-input"
-            />
-
-            <input
-              type="text"
-              name="phoneNumber"
-              autoComplete="off"
-              placeholder="Phone Number"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              required
-              className="user-input"
-            />
+        {message && (
+          <div className="success-message">
+            {message}
           </div>
+        )}
 
-          <button className="primary-btn" type="submit">
-            Create User
-          </button>
-        </form>
-      </div>
+        {/* CREATE USER */}
+        <div className="glass-card">
+          <h2 className="section-title">Create User</h2>
 
-      {/* USERS TABLE */}
-      <div className="glass-card">
-        <table className="user-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Role</th>
-              <th>Created At</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
+          <form onSubmit={handleCreateUser} autoComplete="off">
+            <div className="user-form-grid">
+              <input
+                type="text"
+                name="fullName"
+                autoComplete="off"
+                placeholder="Full Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="user-input"
+              />
 
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id}>
-                <td>{user.id}</td>
-                <td>{user.name}</td>
-                <td>{user.email}</td>
-                <td>{user.phoneNumber}</td>
+              <input
+                type="email"
+                name="emailAddress"
+                autoComplete="new-email"
+                placeholder="Email Address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="user-input"
+              />
 
-                <td>
-                  <select
-                    value={user.role}
-                    onChange={(e) =>
-                      handleRoleChange(user.id, e.target.value)
-                    }
-                    className="role-select"
-                  >
-                    <option value="ADMIN">ADMIN</option>
-                    <option value="MANAGER">MANAGER</option>
-                  </select>
-                </td>
+              <input
+                type="password"
+                name="newPassword"
+                autoComplete="new-password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="user-input"
+              />
 
-                <td>{user.createdAt}</td>
+              <input
+                type="text"
+                name="phoneNumber"
+                autoComplete="off"
+                placeholder="Phone Number"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                required
+                className="user-input"
+              />
+            </div>
 
-                <td>
-                  <button
-                    onClick={() => handleUpdateRole(user)}
-                    className="update-btn"
-                  >
-                    Update
-                  </button>
+            <button className="primary-btn" type="submit">
+              Create User
+            </button>
+          </form>
+        </div>
 
-                  <button
-                    onClick={() => handleDelete(user.id)}
-                    className="delete-btn"
-                  >
-                    Delete
-                  </button>
-                </td>
+        {/* USERS TABLE */}
+        <div className="glass-card">
+          <table className="user-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Role</th>
+                <th>Created At</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {users.map((user) => (
+                <tr key={user.id}>
+                  <td>{user.id}</td>
+                  <td>{user.name}</td>
+                  <td>{user.email}</td>
+                  <td>{user.phoneNumber}</td>
+
+                  <td>
+                    <select
+                      value={user.role}
+                      onChange={(e) =>
+                        handleRoleChange(user.id, e.target.value)
+                      }
+                      className="role-select"
+                    >
+                      <option value="ADMIN">ADMIN</option>
+                      <option value="MANAGER">MANAGER</option>
+                    </select>
+                  </td>
+
+                  <td>{user.createdAt}</td>
+
+                  <td>
+                    <button
+                      onClick={() => handleUpdateRole(user)}
+                      className="update-btn"
+                    >
+                      Update
+                    </button>
+
+                    <button
+                      onClick={() => handleDelete(user.id)}
+                      className="delete-btn"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </Layout>
   );
 }
 
