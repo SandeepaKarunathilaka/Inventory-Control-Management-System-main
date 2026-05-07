@@ -28,5 +28,10 @@ public class Warehouse {
 
     private String managerName;
 
+    private String contactNumber;
+
+    private Boolean active = true;
+
+    @Column(updatable = false)
     private final LocalDateTime createdAt = LocalDateTime.now();
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Layout from "../component/Layout";
 import ApiService from "../service/ApiService";
 import "./WarehousePage.css";
@@ -13,28 +13,13 @@ const WarehousePage = () => {
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [managerName, setManagerName] = useState("");
+  const [contactNumber, setContactNumber] =
+    useState("");
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   const isAdmin = ApiService.isAdmin();
-
-  useEffect(() => {
-
-    const loadData = async () => {
-
-      await fetchWarehouses();
-
-      if (isAdmin) {
-        await fetchUsers();
-      }
-    };
-
-    loadData();
-
-    // eslint-disable-next-line
-
-  }, [isAdmin]);
 
   const showMessage = (msg) => {
 
@@ -54,7 +39,7 @@ const WarehousePage = () => {
     }, 3000);
   };
 
-  const fetchWarehouses = async () => {
+  const fetchWarehouses = useCallback(async () => {
 
     try {
 
@@ -80,9 +65,9 @@ const WarehousePage = () => {
         "Failed to load warehouses"
       );
     }
-  };
+  }, []);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
 
     try {
 
@@ -97,6 +82,7 @@ const WarehousePage = () => {
       setUsers(
         response.userList ||
         response.users ||
+        response ||
         []
       );
 
@@ -108,7 +94,26 @@ const WarehousePage = () => {
         "Failed to load users"
       );
     }
-  };
+  }, []);
+
+  useEffect(() => {
+
+    const loadData = async () => {
+
+      await fetchWarehouses();
+
+      if (isAdmin) {
+        await fetchUsers();
+      }
+    };
+
+    loadData();
+
+  }, [
+    isAdmin,
+    fetchWarehouses,
+    fetchUsers
+  ]);
 
   const managers = users.filter(
     (user) =>
@@ -124,6 +129,7 @@ const WarehousePage = () => {
     setAddress("");
     setCity("");
     setManagerName("");
+    setContactNumber("");
   };
 
   const handleCreateWarehouse =
@@ -136,7 +142,8 @@ const WarehousePage = () => {
         !code ||
         !address ||
         !city ||
-        !managerName
+        !managerName ||
+        !contactNumber
       ) {
 
         showError(
@@ -154,7 +161,13 @@ const WarehousePage = () => {
           address,
           city,
           managerName,
+          contactNumber,
         };
+
+        console.log(
+          "Sending Warehouse:",
+          warehouseData
+        );
 
         await ApiService.addWarehouse(
           warehouseData
@@ -290,10 +303,48 @@ const WarehousePage = () => {
 
                 <input
                   type="text"
-                  placeholder="City"
+                  list="sri-lanka-cities"
+                  placeholder="Select City"
                   value={city}
                   onChange={(e) =>
                     setCity(
+                      e.target.value
+                    )
+                  }
+                  required
+                />
+
+                <datalist id="sri-lanka-cities">
+
+                  <option value="Colombo" />
+                  <option value="Kandy" />
+                  <option value="Galle" />
+                  <option value="Jaffna" />
+                  <option value="Kurunegala" />
+                  <option value="Matara" />
+                  <option value="Negombo" />
+                  <option value="Anuradhapura" />
+                  <option value="Badulla" />
+                  <option value="Ratnapura" />
+                  <option value="Trincomalee" />
+                  <option value="Batticaloa" />
+                  <option value="Kalutara" />
+                  <option value="Nuwara Eliya" />
+                  <option value="Polonnaruwa" />
+                  <option value="Hambantota" />
+                  <option value="Puttalam" />
+                  <option value="Vavuniya" />
+                  <option value="Kilinochchi" />
+                  <option value="Mannar" />
+
+                </datalist>
+
+                <input
+                  type="text"
+                  placeholder="Contact Number"
+                  value={contactNumber}
+                  onChange={(e) =>
+                    setContactNumber(
                       e.target.value
                     )
                   }
@@ -358,6 +409,7 @@ const WarehousePage = () => {
                 <th>Code</th>
                 <th>Address</th>
                 <th>City</th>
+                <th>Contact</th>
                 <th>Manager</th>
 
                 {isAdmin && (
@@ -407,6 +459,12 @@ const WarehousePage = () => {
 
                       <td>
                         {
+                          warehouse.contactNumber
+                        }
+                      </td>
+
+                      <td>
+                        {
                           warehouse.managerName
                         }
                       </td>
@@ -440,8 +498,8 @@ const WarehousePage = () => {
                   <td
                     colSpan={
                       isAdmin
-                        ? 7
-                        : 6
+                        ? 8
+                        : 7
                     }
                     className="no-data"
                   >

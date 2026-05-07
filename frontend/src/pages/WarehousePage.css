@@ -87,6 +87,7 @@
 .warehouse-select {
   cursor: pointer;
   appearance: none;
+  min-height: 56px;
 }
 
 .warehouse-create-btn,
