@@ -5,35 +5,36 @@ import "./WarehousePage.css";
 
 const WarehousePage = () => {
 
-  const [warehouses, setWarehouses] = useState([]);
+  const [warehouseList, setWarehouseList] = useState([]);
+  const [users, setUsers] = useState([]);
 
-  const [warehouseData, setWarehouseData] = useState({
-    warehouseName: "",
-    warehouseCode: "",
-    address: "",
-    city: "",
-    managerName: "",
-  });
+  const [name, setName] = useState("");
+  const [code, setCode] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [managerName, setManagerName] = useState("");
 
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  const isAdmin = ApiService.isAdmin();
 
   useEffect(() => {
-    fetchWarehouses();
-  }, []);
 
-  const fetchWarehouses = async () => {
+    const loadData = async () => {
 
-    try {
+      await fetchWarehouses();
 
-      const data = await ApiService.getAllWarehouses();
+      if (isAdmin) {
+        await fetchUsers();
+      }
+    };
 
-      setWarehouses(data);
+    loadData();
 
-    } catch (error) {
+    // eslint-disable-next-line
 
-      console.log(error);
-    }
-  };
+  }, [isAdmin]);
 
   const showMessage = (msg) => {
 
@@ -44,57 +45,175 @@ const WarehousePage = () => {
     }, 3000);
   };
 
-  const handleChange = (e) => {
+  const showError = (msg) => {
 
-    setWarehouseData({
-      ...warehouseData,
-      [e.target.name]: e.target.value,
-    });
+    setError(msg);
+
+    setTimeout(() => {
+      setError("");
+    }, 3000);
   };
 
-  const handleAddWarehouse = async (e) => {
-
-    e.preventDefault();
+  const fetchWarehouses = async () => {
 
     try {
 
-      await ApiService.addWarehouse(warehouseData);
+      const response =
+        await ApiService.getAllWarehouses();
 
-      showMessage("Warehouse created successfully");
+      console.log(
+        "Warehouse Response:",
+        response
+      );
 
-      setWarehouseData({
-        warehouseName: "",
-        warehouseCode: "",
-        address: "",
-        city: "",
-        managerName: "",
-      });
-
-      fetchWarehouses();
+      setWarehouseList(
+        response.warehouseList ||
+        response ||
+        []
+      );
 
     } catch (error) {
 
       console.log(error);
+
+      showError(
+        "Failed to load warehouses"
+      );
     }
   };
 
-  const handleDeleteWarehouse = async (id) => {
+  const fetchUsers = async () => {
 
     try {
 
-      await ApiService.deleteWarehouse(id);
+      const response =
+        await ApiService.getAllUsers();
 
-      showMessage("Warehouse deleted successfully");
+      console.log(
+        "Users Response:",
+        response
+      );
 
-      fetchWarehouses();
+      setUsers(
+        response.userList ||
+        response.users ||
+        []
+      );
 
     } catch (error) {
 
       console.log(error);
+
+      showError(
+        "Failed to load users"
+      );
     }
   };
+
+  const managers = users.filter(
+    (user) =>
+      user.role &&
+      user.role.toUpperCase() ===
+        "MANAGER"
+  );
+
+  const clearFields = () => {
+
+    setName("");
+    setCode("");
+    setAddress("");
+    setCity("");
+    setManagerName("");
+  };
+
+  const handleCreateWarehouse =
+    async (e) => {
+
+      e.preventDefault();
+
+      if (
+        !name ||
+        !code ||
+        !address ||
+        !city ||
+        !managerName
+      ) {
+
+        showError(
+          "Please fill all fields"
+        );
+
+        return;
+      }
+
+      try {
+
+        const warehouseData = {
+          warehouseName: name,
+          warehouseCode: code,
+          address,
+          city,
+          managerName,
+        };
+
+        await ApiService.addWarehouse(
+          warehouseData
+        );
+
+        showMessage(
+          "Warehouse created successfully"
+        );
+
+        clearFields();
+
+        fetchWarehouses();
+
+      } catch (error) {
+
+        console.log(error);
+
+        showError(
+          error.response?.data?.message ||
+            "Failed to create warehouse"
+        );
+      }
+    };
+
+  const handleDeleteWarehouse =
+    async (warehouseId) => {
+
+      const confirmDelete =
+        window.confirm(
+          "Are you sure you want to delete this warehouse?"
+        );
+
+      if (!confirmDelete) return;
+
+      try {
+
+        await ApiService.deleteWarehouse(
+          warehouseId
+        );
+
+        showMessage(
+          "Warehouse deleted successfully"
+        );
+
+        fetchWarehouses();
+
+      } catch (error) {
+
+        console.log(error);
+
+        showError(
+          error.response?.data?.message ||
+            "Failed to delete warehouse"
+        );
+      }
+    };
 
   return (
+
     <Layout>
 
       <div className="warehouse-page">
@@ -104,123 +223,233 @@ const WarehousePage = () => {
         </h1>
 
         {message && (
-          <div className="warehouse-message">
+          <div className="warehouse-success-message">
             {message}
           </div>
         )}
 
-        <div className="warehouse-card">
+        {error && (
+          <div className="warehouse-error-message">
+            {error}
+          </div>
+        )}
 
-          <h2>Create Warehouse</h2>
+        {/* ADMIN ONLY FORM */}
+        {isAdmin && (
 
-          <form
-            className="warehouse-form"
-            onSubmit={handleAddWarehouse}
-          >
+          <div className="warehouse-form-card">
 
-            <input
-              type="text"
-              name="warehouseName"
-              placeholder="Warehouse Name"
-              value={warehouseData.warehouseName}
-              onChange={handleChange}
-              required
-            />
-
-            <input
-              type="text"
-              name="warehouseCode"
-              placeholder="Warehouse Code"
-              value={warehouseData.warehouseCode}
-              onChange={handleChange}
-              required
-            />
-
-            <input
-              type="text"
-              name="address"
-              placeholder="Address"
-              value={warehouseData.address}
-              onChange={handleChange}
-              required
-            />
-
-            <input
-              type="text"
-              name="city"
-              placeholder="City"
-              value={warehouseData.city}
-              onChange={handleChange}
-              required
-            />
-
-            <input
-              type="text"
-              name="managerName"
-              placeholder="Manager Name"
-              value={warehouseData.managerName}
-              onChange={handleChange}
-              required
-            />
-
-            <button type="submit">
+            <h2 className="warehouse-form-title">
               Create Warehouse
-            </button>
+            </h2>
 
-          </form>
-        </div>
+            <form
+              className="warehouse-form"
+              onSubmit={
+                handleCreateWarehouse
+              }
+            >
 
+              <div className="warehouse-grid">
+
+                <input
+                  type="text"
+                  placeholder="Warehouse Name"
+                  value={name}
+                  onChange={(e) =>
+                    setName(
+                      e.target.value
+                    )
+                  }
+                  required
+                />
+
+                <input
+                  type="text"
+                  placeholder="Warehouse Code"
+                  value={code}
+                  onChange={(e) =>
+                    setCode(
+                      e.target.value
+                    )
+                  }
+                  required
+                />
+
+                <input
+                  type="text"
+                  placeholder="Address"
+                  value={address}
+                  onChange={(e) =>
+                    setAddress(
+                      e.target.value
+                    )
+                  }
+                  required
+                />
+
+                <input
+                  type="text"
+                  placeholder="City"
+                  value={city}
+                  onChange={(e) =>
+                    setCity(
+                      e.target.value
+                    )
+                  }
+                  required
+                />
+
+                {/* MANAGER DROPDOWN */}
+                <select
+                  className="warehouse-select"
+                  value={managerName}
+                  onChange={(e) =>
+                    setManagerName(
+                      e.target.value
+                    )
+                  }
+                  required
+                >
+
+                  <option value="">
+                    Select Manager
+                  </option>
+
+                  {managers.map(
+                    (manager) => (
+                      <option
+                        key={manager.id}
+                        value={
+                          manager.name
+                        }
+                      >
+                        {manager.name}
+                      </option>
+                    )
+                  )}
+
+                </select>
+
+              </div>
+
+              <button
+                type="submit"
+                className="warehouse-create-btn"
+              >
+                Create Warehouse
+              </button>
+
+            </form>
+
+          </div>
+        )}
+
+        {/* TABLE */}
         <div className="warehouse-table-card">
 
           <table className="warehouse-table">
 
             <thead>
 
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Code</th>
-              <th>Address</th>
-              <th>City</th>
-              <th>Manager</th>
-              <th>Actions</th>
-            </tr>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Code</th>
+                <th>Address</th>
+                <th>City</th>
+                <th>Manager</th>
+
+                {isAdmin && (
+                  <th>Actions</th>
+                )}
+
+              </tr>
 
             </thead>
 
             <tbody>
 
-            {warehouses.map((warehouse) => (
+              {warehouseList.length > 0 ? (
 
-              <tr key={warehouse.id}>
+                warehouseList.map(
+                  (warehouse) => (
 
-                <td>{warehouse.id}</td>
+                    <tr
+                      key={warehouse.id}
+                    >
 
-                <td>{warehouse.warehouseName}</td>
+                      <td>
+                        {warehouse.id}
+                      </td>
 
-                <td>{warehouse.warehouseCode}</td>
+                      <td>
+                        {
+                          warehouse.warehouseName
+                        }
+                      </td>
 
-                <td>{warehouse.address}</td>
+                      <td>
+                        {
+                          warehouse.warehouseCode
+                        }
+                      </td>
 
-                <td>{warehouse.city}</td>
+                      <td>
+                        {
+                          warehouse.address
+                        }
+                      </td>
 
-                <td>{warehouse.managerName}</td>
+                      <td>
+                        {warehouse.city}
+                      </td>
 
-                <td>
+                      <td>
+                        {
+                          warehouse.managerName
+                        }
+                      </td>
 
-                  <button
-                    className="delete-btn"
-                    onClick={() =>
-                      handleDeleteWarehouse(warehouse.id)
+                      {isAdmin && (
+
+                        <td>
+
+                          <button
+                            className="warehouse-delete-btn"
+                            onClick={() =>
+                              handleDeleteWarehouse(
+                                warehouse.id
+                              )
+                            }
+                          >
+                            Delete
+                          </button>
+
+                        </td>
+                      )}
+
+                    </tr>
+                  )
+                )
+
+              ) : (
+
+                <tr>
+
+                  <td
+                    colSpan={
+                      isAdmin
+                        ? 7
+                        : 6
                     }
+                    className="no-data"
                   >
-                    Delete
-                  </button>
+                    No Warehouses Found
+                  </td>
 
-                </td>
-
-              </tr>
-            ))}
+                </tr>
+              )}
 
             </tbody>
 
