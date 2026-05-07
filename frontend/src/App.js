@@ -16,6 +16,7 @@ import TransactionsPage from "./pages/TransactionsPage";
 import TransactionDetailsPage from "./pages/TransactionDetailsPage";
 import ProfilePage from "./pages/ProfilePage";
 import DashboardPage from "./pages/DashboardPage";
+import UserManagementPage from "./pages/UserManagementPage";
 
 function App() {
   return (
@@ -30,6 +31,10 @@ function App() {
         <Route
           path="/category"
           element={<AdminRoute element={<CategoryPage />} />}
+        />
+        <Route
+          path="/users"
+          element={<AdminRoute element={<UserManagementPage />} />}
         />
         <Route
           path="/supplier"
