@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ApiService from "../service/ApiService";
+import "../styles/UserManagementPage.css";
 
 function UserManagementPage() {
   const [users, setUsers] = useState([]);
@@ -102,46 +103,21 @@ function UserManagementPage() {
   };
 
   return (
-    <div style={{ padding: "30px" }}>
-      <h1 style={{ marginBottom: "20px" }}>User Management</h1>
+    <div className="user-management-container">
+      <h1 className="user-management-title">User Management</h1>
 
       {message && (
-        <div
-          style={{
-            backgroundColor: "#d4edda",
-            color: "#155724",
-            fontWeight: "500",
-            padding: "12px",
-            borderRadius: "6px",
-            marginBottom: "20px",
-            transition: "0.3s ease",
-          }}
-        >
+        <div className="success-message">
           {message}
         </div>
       )}
 
-      {/* CREATE USER FORM */}
-      <div
-        style={{
-          backgroundColor: "#ffffff",
-          padding: "20px",
-          borderRadius: "10px",
-          marginBottom: "30px",
-          boxShadow: "0px 2px 10px rgba(0,0,0,0.1)",
-        }}
-      >
-        <h2>Create User</h2>
+      {/* CREATE USER */}
+      <div className="glass-card">
+        <h2 className="section-title">Create User</h2>
 
         <form onSubmit={handleCreateUser} autoComplete="off">
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "15px",
-              marginBottom: "15px",
-            }}
-          >
+          <div className="user-form-grid">
             <input
               type="text"
               name="fullName"
@@ -150,7 +126,7 @@ function UserManagementPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              style={inputStyle}
+              className="user-input"
             />
 
             <input
@@ -161,7 +137,7 @@ function UserManagementPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              style={inputStyle}
+              className="user-input"
             />
 
             <input
@@ -172,7 +148,7 @@ function UserManagementPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              style={inputStyle}
+              className="user-input"
             />
 
             <input
@@ -183,80 +159,65 @@ function UserManagementPage() {
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               required
-              style={inputStyle}
+              className="user-input"
             />
           </div>
 
-          <button style={createButtonStyle} type="submit">
+          <button className="primary-btn" type="submit">
             Create User
           </button>
         </form>
       </div>
 
-      {/* USER TABLE */}
-      <div
-        style={{
-          backgroundColor: "#ffffff",
-          padding: "20px",
-          borderRadius: "10px",
-          boxShadow: "0px 2px 10px rgba(0,0,0,0.1)",
-        }}
-      >
-        <table
-          width="100%"
-          style={{
-            borderCollapse: "collapse",
-          }}
-        >
+      {/* USERS TABLE */}
+      <div className="glass-card">
+        <table className="user-table">
           <thead>
-            <tr style={{ backgroundColor: "#f2f2f2" }}>
-              <th style={tableHeaderStyle}>ID</th>
-              <th style={tableHeaderStyle}>Name</th>
-              <th style={tableHeaderStyle}>Email</th>
-              <th style={tableHeaderStyle}>Phone</th>
-              <th style={tableHeaderStyle}>Role</th>
-              <th style={tableHeaderStyle}>Created At</th>
-              <th style={tableHeaderStyle}>Actions</th>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Role</th>
+              <th>Created At</th>
+              <th>Actions</th>
             </tr>
           </thead>
 
           <tbody>
             {users.map((user) => (
               <tr key={user.id}>
-                <td style={tableCellStyle}>{user.id}</td>
-                <td style={tableCellStyle}>{user.name}</td>
-                <td style={tableCellStyle}>{user.email}</td>
-                <td style={tableCellStyle}>{user.phoneNumber}</td>
+                <td>{user.id}</td>
+                <td>{user.name}</td>
+                <td>{user.email}</td>
+                <td>{user.phoneNumber}</td>
 
-                <td style={tableCellStyle}>
+                <td>
                   <select
                     value={user.role}
                     onChange={(e) =>
                       handleRoleChange(user.id, e.target.value)
                     }
-                    style={{
-                      padding: "8px",
-                      borderRadius: "5px",
-                    }}
+                    className="role-select"
                   >
                     <option value="ADMIN">ADMIN</option>
                     <option value="MANAGER">MANAGER</option>
                   </select>
                 </td>
 
-                <td style={tableCellStyle}>{user.createdAt}</td>
+                <td>{user.createdAt}</td>
 
-                <td style={tableCellStyle}>
+                <td>
                   <button
                     onClick={() => handleUpdateRole(user)}
-                    style={updateButtonStyle}
+                    className="update-btn"
                   >
                     Update
                   </button>
 
                   <button
                     onClick={() => handleDelete(user.id)}
-                    style={deleteButtonStyle}
+                    className="delete-btn"
                   >
                     Delete
                   </button>
@@ -269,49 +230,5 @@ function UserManagementPage() {
     </div>
   );
 }
-
-const inputStyle = {
-  padding: "12px",
-  borderRadius: "5px",
-  border: "1px solid #ccc",
-};
-
-const createButtonStyle = {
-  backgroundColor: "#28a745",
-  color: "white",
-  padding: "10px 20px",
-  border: "none",
-  borderRadius: "5px",
-  cursor: "pointer",
-};
-
-const updateButtonStyle = {
-  backgroundColor: "#007bff",
-  color: "white",
-  padding: "8px 12px",
-  border: "none",
-  borderRadius: "5px",
-  cursor: "pointer",
-  marginRight: "10px",
-};
-
-const deleteButtonStyle = {
-  backgroundColor: "#dc3545",
-  color: "white",
-  padding: "8px 12px",
-  border: "none",
-  borderRadius: "5px",
-  cursor: "pointer",
-};
-
-const tableHeaderStyle = {
-  padding: "12px",
-  textAlign: "left",
-};
-
-const tableCellStyle = {
-  padding: "12px",
-  borderBottom: "1px solid #ddd",
-};
 
 export default UserManagementPage;
