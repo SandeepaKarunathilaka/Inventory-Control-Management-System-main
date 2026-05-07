@@ -1,30 +1,41 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import ApiService from "../service/ApiService";
 
 const ResetPasswordPage = () => {
+
   const location = useLocation();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState(location.state?.email || "");
   const [otp, setOtp] = useState("");
+
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [message, setMessage] = useState("");
   const [fieldError, setFieldError] = useState("");
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
   const passwordRegex =
     /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_\-+={[}\]|\\:;"'<>,.?/~`]).{8,}$/;
 
   const showMessage = (msg) => {
+
     setMessage(msg);
+
     setTimeout(() => {
       setMessage("");
     }, 4000);
   };
 
   const validateForm = () => {
+
     if (!email.trim()) {
       setFieldError("Email is required.");
       return false;
@@ -72,11 +83,13 @@ const ResetPasswordPage = () => {
   };
 
   const handleResetPassword = async (e) => {
+
     e.preventDefault();
 
     if (!validateForm()) return;
 
     try {
+
       await ApiService.verifyResetOtp({
         email: email.trim(),
         otp: otp.trim(),
@@ -93,90 +106,173 @@ const ResetPasswordPage = () => {
       setTimeout(() => {
         navigate("/login");
       }, 1500);
+
     } catch (error) {
+
       setFieldError(
-        error.response?.data?.message || "Error resetting password: " + error.message
+        error.response?.data?.message ||
+        "Error resetting password: " + error.message
       );
     }
   };
 
   return (
     <div className="auth-page">
+
       <div className="auth-container glass-card">
+
         <div className="auth-brand">
-          <img src="/logo.png" alt="Web-Inventory Logo" className="auth-logo" />
+
+          <img
+            src="/logo.png"
+            alt="Web-Inventory Logo"
+            className="auth-logo"
+          />
+
           <h2>Reset Password</h2>
+
           <p className="auth-subtitle">
             Enter the OTP and create your new password
           </p>
+
         </div>
 
         {message && <p className="message">{message}</p>}
-        {fieldError && <p className="error-message">{fieldError}</p>}
+
+        {fieldError && (
+          <p className="error-message">{fieldError}</p>
+        )}
 
         <form onSubmit={handleResetPassword} noValidate>
+
           <div className="form-group-auth">
-            <label htmlFor="reset-email">
-              Email Address <span className="required-star">*</span>
+
+            <label>
+              Email Address
+              <span className="required-star">*</span>
             </label>
+
             <input
-              id="reset-email"
               type="email"
               placeholder="Enter your registered email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
+
           </div>
 
           <div className="form-group-auth">
-            <label htmlFor="reset-otp">
-              OTP Code <span className="required-star">*</span>
+
+            <label>
+              OTP Code
+              <span className="required-star">*</span>
             </label>
+
             <input
-              id="reset-otp"
               type="text"
               placeholder="Enter 6-digit OTP"
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
               required
             />
+
           </div>
+
+          {/* NEW PASSWORD */}
 
           <div className="form-group-auth">
-            <label htmlFor="new-password">
-              New Password <span className="required-star">*</span>
+
+            <label>
+              New Password
+              <span className="required-star">*</span>
             </label>
-            <input
-              id="new-password"
-              type="password"
-              placeholder="Enter new password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-            />
+
+            <div style={{ position: "relative" }}>
+
+              <input
+                type={showNewPassword ? "text" : "password"}
+                placeholder="Enter new password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                style={{ paddingRight: "50px" }}
+              />
+
+              <span
+                onClick={() =>
+                  setShowNewPassword(!showNewPassword)
+                }
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  right: "18px",
+                  transform: "translateY(-50%)",
+                  cursor: "pointer",
+                  color: "#555",
+                  fontSize: "18px",
+                }}
+              >
+                {showNewPassword ? <FaEyeSlash /> : <FaEye />}
+              </span>
+
+            </div>
+
           </div>
+
+          {/* CONFIRM PASSWORD */}
 
           <div className="form-group-auth">
-            <label htmlFor="confirm-password">
-              Confirm Password <span className="required-star">*</span>
+
+            <label>
+              Confirm Password
+              <span className="required-star">*</span>
             </label>
-            <input
-              id="confirm-password"
-              type="password"
-              placeholder="Re-enter new password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-            />
+
+            <div style={{ position: "relative" }}>
+
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Re-enter new password"
+                value={confirmPassword}
+                onChange={(e) =>
+                  setConfirmPassword(e.target.value)
+                }
+                required
+                style={{ paddingRight: "50px" }}
+              />
+
+              <span
+                onClick={() =>
+                  setShowConfirmPassword(!showConfirmPassword)
+                }
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  right: "18px",
+                  transform: "translateY(-50%)",
+                  cursor: "pointer",
+                  color: "#555",
+                  fontSize: "18px",
+                }}
+              >
+                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+              </span>
+
+            </div>
+
           </div>
 
-          <button type="submit">Reset Password</button>
+          <button type="submit">
+            Reset Password
+          </button>
+
         </form>
 
         <p>
           Back to <Link to="/login">Login</Link>
         </p>
+
       </div>
     </div>
   );
