@@ -14,6 +14,16 @@ function UserManagementPage() {
     fetchUsers();
   }, []);
 
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => {
+        setMessage("");
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
   const fetchUsers = async () => {
     try {
       const response = await ApiService.getAllUsers();
@@ -96,16 +106,19 @@ function UserManagementPage() {
       <h1 style={{ marginBottom: "20px" }}>User Management</h1>
 
       {message && (
-        <p
+        <div
           style={{
             backgroundColor: "#d4edda",
-            padding: "10px",
-            borderRadius: "5px",
+            color: "#155724",
+            fontWeight: "500",
+            padding: "12px",
+            borderRadius: "6px",
             marginBottom: "20px",
+            transition: "0.3s ease",
           }}
         >
           {message}
-        </p>
+        </div>
       )}
 
       {/* CREATE USER FORM */}
@@ -120,7 +133,7 @@ function UserManagementPage() {
       >
         <h2>Create User</h2>
 
-        <form onSubmit={handleCreateUser}>
+        <form onSubmit={handleCreateUser} autoComplete="off">
           <div
             style={{
               display: "grid",
@@ -131,6 +144,8 @@ function UserManagementPage() {
           >
             <input
               type="text"
+              name="fullName"
+              autoComplete="off"
               placeholder="Full Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -140,6 +155,8 @@ function UserManagementPage() {
 
             <input
               type="email"
+              name="emailAddress"
+              autoComplete="new-email"
               placeholder="Email Address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -149,6 +166,8 @@ function UserManagementPage() {
 
             <input
               type="password"
+              name="newPassword"
+              autoComplete="new-password"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -158,6 +177,8 @@ function UserManagementPage() {
 
             <input
               type="text"
+              name="phoneNumber"
+              autoComplete="off"
               placeholder="Phone Number"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
