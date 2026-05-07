@@ -145,7 +145,7 @@ const WarehousePage = () => {
     (user) =>
       user.role &&
       user.role.toUpperCase() ===
-        "MANAGER"
+        "WAREHOUSE_MANAGER"
   );
 
   const clearFields = () => {
