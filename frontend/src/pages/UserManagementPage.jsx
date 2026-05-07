@@ -114,7 +114,7 @@ function UserManagementPage() {
           </div>
         )}
 
-        {/* CREATE USER */}
+        {/* CREATE USER SECTION */}
         <div className="glass-card">
           <h2 className="section-title">Create User</h2>
 
@@ -171,7 +171,7 @@ function UserManagementPage() {
           </form>
         </div>
 
-        {/* USERS TABLE */}
+        {/* USER TABLE SECTION */}
         <div className="glass-card">
           <table className="user-table">
             <thead>
@@ -210,19 +210,21 @@ function UserManagementPage() {
                   <td>{user.createdAt}</td>
 
                   <td>
-                    <button
-                      onClick={() => handleUpdateRole(user)}
-                      className="update-btn"
-                    >
-                      Update
-                    </button>
+                    <div className="action-buttons">
+                      <button
+                        onClick={() => handleUpdateRole(user)}
+                        className="update-btn"
+                      >
+                        Update
+                      </button>
 
-                    <button
-                      onClick={() => handleDelete(user.id)}
-                      className="delete-btn"
-                    >
-                      Delete
-                    </button>
+                      <button
+                        onClick={() => handleDelete(user.id)}
+                        className="delete-btn"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
