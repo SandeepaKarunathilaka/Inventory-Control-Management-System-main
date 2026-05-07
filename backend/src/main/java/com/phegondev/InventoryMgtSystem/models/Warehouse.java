@@ -30,8 +30,10 @@ public class Warehouse {
 
     private String contactNumber;
 
+    private String locations;
+
     private Boolean active = true;
 
-    @Column(updatable = false)
-    private final LocalDateTime createdAt = LocalDateTime.now();
+    private final LocalDateTime createdAt =
+            LocalDateTime.now();
 }

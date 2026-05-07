@@ -30,7 +30,8 @@ public class WarehouseServiceImpl implements WarehouseService {
     @Override
     public Warehouse updateWarehouse(Long id, Warehouse warehouse) {
 
-        Warehouse existingWarehouse = warehouseRepository.findById(id)
+        Warehouse existingWarehouse =
+                warehouseRepository.findById(id)
                 .orElseThrow(() ->
                         new NotFoundException("Warehouse not found"));
 
@@ -49,13 +50,23 @@ public class WarehouseServiceImpl implements WarehouseService {
         existingWarehouse.setManagerName(
                 warehouse.getManagerName());
 
+        existingWarehouse.setContactNumber(
+                warehouse.getContactNumber());
+
+        existingWarehouse.setLocations(
+                warehouse.getLocations());
+
+        existingWarehouse.setActive(
+                warehouse.getActive());
+
         return warehouseRepository.save(existingWarehouse);
     }
 
     @Override
     public void deleteWarehouse(Long id) {
 
-        Warehouse warehouse = warehouseRepository.findById(id)
+        Warehouse warehouse =
+                warehouseRepository.findById(id)
                 .orElseThrow(() ->
                         new NotFoundException("Warehouse not found"));
 

@@ -1,25 +1,49 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
+
 import Layout from "../component/Layout";
 import ApiService from "../service/ApiService";
 import "./WarehousePage.css";
 
 const WarehousePage = () => {
 
-  const [warehouseList, setWarehouseList] = useState([]);
+  const [warehouseList, setWarehouseList] =
+    useState([]);
+
   const [users, setUsers] = useState([]);
 
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
-  const [address, setAddress] = useState("");
-  const [city, setCity] = useState("");
-  const [managerName, setManagerName] = useState("");
-  const [contactNumber, setContactNumber] =
+  const [address, setAddress] =
     useState("");
 
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [city, setCity] = useState("");
 
-  const isAdmin = ApiService.isAdmin();
+  const [managerName, setManagerName] =
+    useState("");
+
+  const [
+    contactNumber,
+    setContactNumber,
+  ] = useState("");
+
+  const [locations, setLocations] =
+    useState("");
+
+  const [active, setActive] =
+    useState(true);
+
+  const [message, setMessage] =
+    useState("");
+
+  const [error, setError] =
+    useState("");
+
+  const isAdmin =
+    ApiService.isAdmin();
 
   const showMessage = (msg) => {
 
@@ -39,62 +63,64 @@ const WarehousePage = () => {
     }, 3000);
   };
 
-  const fetchWarehouses = useCallback(async () => {
+  const fetchWarehouses =
+    useCallback(async () => {
 
-    try {
+      try {
 
-      const response =
-        await ApiService.getAllWarehouses();
+        const response =
+          await ApiService.getAllWarehouses();
 
-      console.log(
-        "Warehouse Response:",
-        response
-      );
+        console.log(
+          "Warehouse Response:",
+          response
+        );
 
-      setWarehouseList(
-        response.warehouseList ||
-        response ||
-        []
-      );
+        setWarehouseList(
+          response.warehouseList ||
+          response ||
+          []
+        );
 
-    } catch (error) {
+      } catch (error) {
 
-      console.log(error);
+        console.log(error);
 
-      showError(
-        "Failed to load warehouses"
-      );
-    }
-  }, []);
+        showError(
+          "Failed to load warehouses"
+        );
+      }
+    }, []);
 
-  const fetchUsers = useCallback(async () => {
+  const fetchUsers =
+    useCallback(async () => {
 
-    try {
+      try {
 
-      const response =
-        await ApiService.getAllUsers();
+        const response =
+          await ApiService.getAllUsers();
 
-      console.log(
-        "Users Response:",
-        response
-      );
+        console.log(
+          "Users Response:",
+          response
+        );
 
-      setUsers(
-        response.userList ||
-        response.users ||
-        response ||
-        []
-      );
+        setUsers(
+          response.userList ||
+          response.users ||
+          response ||
+          []
+        );
 
-    } catch (error) {
+      } catch (error) {
 
-      console.log(error);
+        console.log(error);
 
-      showError(
-        "Failed to load users"
-      );
-    }
-  }, []);
+        showError(
+          "Failed to load users"
+        );
+      }
+    }, []);
 
   useEffect(() => {
 
@@ -112,7 +138,7 @@ const WarehousePage = () => {
   }, [
     isAdmin,
     fetchWarehouses,
-    fetchUsers
+    fetchUsers,
   ]);
 
   const managers = users.filter(
@@ -130,6 +156,8 @@ const WarehousePage = () => {
     setCity("");
     setManagerName("");
     setContactNumber("");
+    setLocations("");
+    setActive(true);
   };
 
   const handleCreateWarehouse =
@@ -143,7 +171,8 @@ const WarehousePage = () => {
         !address ||
         !city ||
         !managerName ||
-        !contactNumber
+        !contactNumber ||
+        !locations
       ) {
 
         showError(
@@ -162,6 +191,8 @@ const WarehousePage = () => {
           city,
           managerName,
           contactNumber,
+          locations,
+          active,
         };
 
         console.log(
@@ -221,6 +252,42 @@ const WarehousePage = () => {
         showError(
           error.response?.data?.message ||
             "Failed to delete warehouse"
+        );
+      }
+    };
+
+  /* STATUS TOGGLE */
+  const handleToggleStatus =
+    async (warehouse) => {
+
+      try {
+
+        const updatedWarehouse = {
+          ...warehouse,
+          active: !warehouse.active,
+        };
+
+        await ApiService.updateWarehouse(
+          warehouse.id,
+          updatedWarehouse
+        );
+
+        showMessage(
+          `Warehouse marked as ${
+            !warehouse.active
+              ? "Active"
+              : "Inactive"
+          }`
+        );
+
+        fetchWarehouses();
+
+      } catch (error) {
+
+        console.log(error);
+
+        showError(
+          "Failed to update warehouse status"
         );
       }
     };
@@ -351,7 +418,18 @@ const WarehousePage = () => {
                   required
                 />
 
-                {/* MANAGER DROPDOWN */}
+                <input
+                  type="text"
+                  placeholder="Locations (Rack A1, Section B)"
+                  value={locations}
+                  onChange={(e) =>
+                    setLocations(
+                      e.target.value
+                    )
+                  }
+                  required
+                />
+
                 <select
                   className="warehouse-select"
                   value={managerName}
@@ -379,6 +457,27 @@ const WarehousePage = () => {
                       </option>
                     )
                   )}
+
+                </select>
+
+                <select
+                  className="warehouse-select"
+                  value={active}
+                  onChange={(e) =>
+                    setActive(
+                      e.target.value ===
+                        "true"
+                    )
+                  }
+                >
+
+                  <option value={true}>
+                    Active Warehouse
+                  </option>
+
+                  <option value={false}>
+                    Inactive Warehouse
+                  </option>
 
                 </select>
 
@@ -411,6 +510,8 @@ const WarehousePage = () => {
                 <th>City</th>
                 <th>Contact</th>
                 <th>Manager</th>
+                <th>Status</th>
+                <th>Locations</th>
 
                 {isAdmin && (
                   <th>Actions</th>
@@ -469,6 +570,60 @@ const WarehousePage = () => {
                         }
                       </td>
 
+                      {/* STATUS TOGGLE */}
+                      <td>
+
+                        {isAdmin ? (
+
+                          <button
+                            className={
+                              warehouse.active
+                                ? "status-active"
+                                : "status-inactive"
+                            }
+                            onClick={() =>
+                              handleToggleStatus(
+                                warehouse
+                              )
+                            }
+                          >
+                            {
+                              warehouse.active
+                                ? "Active"
+                                : "Inactive"
+                            }
+                          </button>
+
+                        ) : (
+
+                          <span
+                            className={
+                              warehouse.active
+                                ? "status-active"
+                                : "status-inactive"
+                            }
+                          >
+                            {
+                              warehouse.active
+                                ? "Active"
+                                : "Inactive"
+                            }
+                          </span>
+
+                        )}
+
+                      </td>
+
+                      <td>
+
+                        <span className="location-badge">
+                          {
+                            warehouse.locations
+                          }
+                        </span>
+
+                      </td>
+
                       {isAdmin && (
 
                         <td>
@@ -498,8 +653,8 @@ const WarehousePage = () => {
                   <td
                     colSpan={
                       isAdmin
-                        ? 8
-                        : 7
+                        ? 10
+                        : 9
                     }
                     className="no-data"
                   >
