@@ -44,6 +44,12 @@ const Sidebar = () => {
           </li>
         )}
 
+        {isAdmin && (
+          <li>
+            <Link to="/users">User Management</Link>
+          </li>
+        )}
+
         {isAuth && (
           <li>
             <Link to="/purchase">Purchase</Link>
