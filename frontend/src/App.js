@@ -16,6 +16,7 @@ import TransactionsPage from "./pages/TransactionsPage";
 import TransactionDetailsPage from "./pages/TransactionDetailsPage";
 import ProfilePage from "./pages/ProfilePage";
 import DashboardPage from "./pages/DashboardPage";
+import WarehousePage from "./pages/WarehousePage";
 
 function App() {
   return (
@@ -34,6 +35,10 @@ function App() {
         <Route
           path="/supplier"
           element={<AdminRoute element={<SupplierPage />} />}
+        />
+        <Route
+          path="/warehouse"
+          element={<AdminRoute element={<WarehousePage />} />}
         />
         <Route
           path="/add-supplier"
