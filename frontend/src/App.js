@@ -28,9 +28,15 @@ function App() {
         <Route path="/supplier" element={<AdminRoute element={<SupplierPage/>}/>}/>
         <Route path="/add-supplier" element={<AdminRoute element={<AddEditSupplierPage/>}/>}/>
         <Route path="/edit-supplier/:supplierId" element={<AdminRoute element={<AddEditSupplierPage/>}/>}/>
+<<<<<<< HEAD
+
+        {/* PRODUCTS: list accessible to all authenticated users, management ADMIN-only */}
+        <Route path="/product" element={<ProtectedRoute element={<ProductPage/>}/>}/>
+=======
         <Route path="/product" element={<AdminRoute element={<ProductPage/>}/>}/>
 
 
+>>>>>>> parent of 4e4a495 (fix)
         <Route path="/add-product" element={<AdminRoute element={<AddEditProductPage/>}/>}/>
         <Route path="/edit-product/:productId" element={<AdminRoute element={<AddEditProductPage/>}/>}/>
 

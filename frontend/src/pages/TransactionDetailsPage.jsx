@@ -92,7 +92,11 @@ const handleUpdateStatus = async()=>{
                 <p>Description: {transaction.product.description}</p>
 
                 {transaction.product.imageUrl && (
+<<<<<<< HEAD
+                <img src={ApiService.getProductImageUrl(transaction.product.imageUrl)} alt={transaction.product.name} />
+=======
                 <img src={transaction.product.imageUrl} alt={transaction.product.name} />
+>>>>>>> parent of 4e4a495 (fix)
                 )}
                 
            </div>

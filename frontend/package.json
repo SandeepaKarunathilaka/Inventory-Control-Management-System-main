@@ -8,6 +8,11 @@
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.7",
     "crypto-js": "^4.2.0",
+<<<<<<< HEAD
+    "jspdf": "^4.2.0",
+    "jspdf-autotable": "^5.0.7",
+=======
+>>>>>>> parent of 4e4a495 (fix)
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.27.0",

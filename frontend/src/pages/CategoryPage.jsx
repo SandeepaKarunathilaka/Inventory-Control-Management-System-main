@@ -125,7 +125,11 @@ const CategoryPage = () => {
                     Edit
                   </button>
                   <button onClick={() => handleDeleteCategory(category.id)}>
+<<<<<<< HEAD
+                    Delete
+=======
                     Edlete
+>>>>>>> parent of 4e4a495 (fix)
                   </button>
                 </div>
               </li>
