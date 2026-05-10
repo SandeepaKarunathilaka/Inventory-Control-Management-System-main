@@ -255,15 +255,15 @@ export default class ApiService {
 
 
     /**Transactions EDNPOINTS */
-    static async purchaseProduct(body) {
-        const response = await axios.post(`${this.BASE_URL}/transactions/purchase`, body, {
+    static async stockInProduct(body) {
+        const response = await axios.post(`${this.BASE_URL}/transactions/stock-in`, body, {
             headers: this.getHeader()
         })
         return response.data;
     }
 
-    static async sellProduct(body) {
-        const response = await axios.post(`${this.BASE_URL}/transactions/sell`, body, {
+    static async stockOutProduct(body) {
+        const response = await axios.post(`${this.BASE_URL}/transactions/stock-out`, body, {
             headers: this.getHeader()
         })
         return response.data;
@@ -311,6 +311,32 @@ export default class ApiService {
         return response.data;
     }
 
+    static async updateTransaction(transactionId, body) {
+        const response = await axios.put(`${this.BASE_URL}/transactions/update/${transactionId}`, body, {
+            headers: this.getHeader()
+        })
+        return response.data;
+    }
+
+    static async deleteTransaction(transactionId) {
+        const response = await axios.delete(`${this.BASE_URL}/transactions/delete/${transactionId}`, {
+            headers: this.getHeader()
+        })
+        return response.data;
+    }
+
+    static async getTransactionReport(startDate, endDate) {
+        let url = `${this.BASE_URL}/transactions/report`;
+        const params = new URLSearchParams();
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+        if (params.toString()) url += `?${params.toString()}`;
+
+        const response = await axios.get(url, {
+            headers: this.getHeader()
+        })
+        return response.data;
+    }
 
     /**AUTHENTICATION CHECKER */
     static logout(){

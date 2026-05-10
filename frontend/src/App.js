@@ -8,10 +8,14 @@ import SupplierPage from "./pages/SupplierPage";
 import AddEditSupplierPage from "./pages/AddEditSupplierPage";
 import ProductPage from "./pages/ProductPage";
 import AddEditProductPage from "./pages/AddEditProductPage";
-import PurchasePage from "./pages/PurchasePage";
-import SellPage from "./pages/SellPage";
+import StockInPage from "./pages/StockInPage";
+import StockOutPage from "./pages/StockOutPage";
 import TransactionsPage from "./pages/TransactionsPage";
 import TransactionDetailsPage from "./pages/TransactionDetailsPage";
+import UpdateTransactionPage from "./pages/UpdateTransactionPage";
+import TransactionReportPage from "./pages/TransactionReportPage";
+
+
 import ProfilePage from "./pages/ProfilePage";
 import DashboardPage from "./pages/DashboardPage";
 
@@ -35,10 +39,13 @@ function App() {
         <Route path="/edit-product/:productId" element={<AdminRoute element={<AddEditProductPage/>}/>}/>
 
           {/* ADMIN AND MANAGERS ROUTES */}
-        <Route path="/purchase" element={<ProtectedRoute element={<PurchasePage/>}/>}/>
-        <Route path="/sell" element={<ProtectedRoute element={<SellPage/>}/>}/>
+        <Route path="/stock-in" element={<ProtectedRoute element={<StockInPage/>}/>}/>
+        <Route path="/stock-out" element={<ProtectedRoute element={<StockOutPage/>}/>}/>
         <Route path="/transaction" element={<ProtectedRoute element={<TransactionsPage/>}/>}/>
         <Route path="/transaction/:transactionId" element={<ProtectedRoute element={<TransactionDetailsPage/>}/>}/>
+        <Route path="/update-transaction/:transactionId" element={<ProtectedRoute element={<UpdateTransactionPage/>}/>}/>
+        <Route path="/report" element={<ProtectedRoute element={<TransactionReportPage/>}/>}/>
+
 
         <Route path="/profile" element={<ProtectedRoute element={<ProfilePage/>}/>}/>
         <Route path="/dashboard" element={<ProtectedRoute element={<DashboardPage/>}/>}/>

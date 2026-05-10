@@ -48,6 +48,21 @@ const handleUpdateStatus = async()=>{
     }
 }
 
+//Handle Delete Transaction
+const handleDeleteTransaction = async () => {
+  if (window.confirm("Are you sure you want to delete this transaction? This action will reverse the stock changes and cannot be undone.")) {
+    try {
+      const response = await ApiService.deleteTransaction(transactionId);
+      if (response.status === 200) {
+        showMessage(response.message || "Transaction deleted successfully.");
+        setTimeout(() => navigate("/transaction"), 1500);
+      }
+    } catch (error) {
+      showMessage(error.response?.data?.message || "Error deleting transaction: " + error);
+    }
+  }
+};
+
 
   //Method to show message or errors
   const showMessage = (msg) => {
@@ -66,6 +81,14 @@ const handleUpdateStatus = async()=>{
       <div className="transaction-details-page">
         {transaction && (
            <>
+           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px', gap: '10px' }}>
+             <button className="primary-btn" onClick={() => navigate(`/update-transaction/${transactionId}`)}>
+               Edit Transaction
+             </button>
+             <button className="btn-red-outline" onClick={() => handleDeleteTransaction()}>
+               Delete Transaction
+             </button>
+           </div>
            {/* Transaction base information */}
            <div className="section-card">
                 <h2>Transaction Information</h2>

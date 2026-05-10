@@ -17,14 +17,14 @@ public class TransactionController {
 
     private final TransactionService transactionService;
 
-    @PostMapping("/purchase")
-    public ResponseEntity<Response> purchaseInventory(@RequestBody @Valid TransactionRequest transactionRequest) {
-        return ResponseEntity.ok(transactionService.purchase(transactionRequest));
+    @PostMapping("/stock-in")
+    public ResponseEntity<Response> stockInInventory(@RequestBody @Valid TransactionRequest transactionRequest) {
+        return ResponseEntity.ok(transactionService.stockIn(transactionRequest));
     }
 
-    @PostMapping("/sell")
-    public ResponseEntity<Response> makeSale(@RequestBody @Valid TransactionRequest transactionRequest) {
-        return ResponseEntity.ok(transactionService.sell(transactionRequest));
+    @PostMapping("/stock-out")
+    public ResponseEntity<Response> stockOutInventory(@RequestBody @Valid TransactionRequest transactionRequest) {
+        return ResponseEntity.ok(transactionService.stockOut(transactionRequest));
     }
 
     @PostMapping("/return")
@@ -43,6 +43,13 @@ public class TransactionController {
     }
 
 
+    @GetMapping("/report")
+    public ResponseEntity<Response> getTransactionReport(
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate) {
+        return ResponseEntity.ok(transactionService.getTransactionReport(startDate, endDate));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Response> getTransactionById(@PathVariable Long id) {
         return ResponseEntity.ok(transactionService.getAllTransactionById(id));
@@ -54,6 +61,20 @@ public class TransactionController {
             @RequestParam int year) {
 
         return ResponseEntity.ok(transactionService.getAllTransactionByMonthAndYear(month, year));
+    }
+
+
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<Response> updateTransaction(
+            @PathVariable Long id,
+            @RequestBody @Valid TransactionRequest transactionRequest) {
+        return ResponseEntity.ok(transactionService.updateTransaction(id, transactionRequest));
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Response> deleteTransaction(@PathVariable Long id) {
+        return ResponseEntity.ok(transactionService.deleteTransaction(id));
     }
 
     @PutMapping("/{transactionId}")
