@@ -433,14 +433,9 @@ button[type="submit"]:hover {
 
 .product-header {
   display: flex;
-<<<<<<< HEAD
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-=======
-  justify-content: space-between;
-  align-items: center;
->>>>>>> parent of 4e4a495 (fix)
   margin-bottom: 2rem;
 }
 
@@ -450,7 +445,6 @@ button[type="submit"]:hover {
   color: #008080;
 }
 
-<<<<<<< HEAD
 .product-header-actions {
   display: flex;
   align-items: center;
@@ -491,8 +485,6 @@ button[type="submit"]:hover {
   color: #374151;
 }
 
-=======
->>>>>>> parent of 4e4a495 (fix)
 .add-product-btn {
   padding: 13px 20px;
   background-color: #008080;
