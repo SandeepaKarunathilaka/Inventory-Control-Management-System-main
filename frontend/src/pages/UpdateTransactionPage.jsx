@@ -3,15 +3,14 @@ import Layout from "../component/Layout";
 import ApiService from "../service/ApiService";
 import { useNavigate, useParams } from "react-router-dom";
 
+/**
+ * Posted transactions cannot change quantity/description on the server in this API version.
+ * This page summarizes the line and links to details / stock flows for corrections.
+ */
 const UpdateTransactionPage = () => {
   const { transactionId } = useParams();
   const [transaction, setTransaction] = useState(null);
-  const [quantity, setQuantity] = useState("");
-  const [description, setDescription] = useState("");
-  const [note, setNote] = useState("");
   const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,128 +18,87 @@ const UpdateTransactionPage = () => {
       try {
         const response = await ApiService.getTransactionById(transactionId);
         if (response.status === 200) {
-          const t = response.transaction;
-          setTransaction(t);
-          setQuantity(t.totalProducts);
-          setDescription(t.description || "");
-          setNote(t.note || "");
+          setTransaction(response.transaction);
         }
       } catch (error) {
-        showMessage(error.response?.data?.message || "Error fetching transaction details", true);
+        showMessage(error.response?.data?.message || "Error loading transaction");
       }
     };
     fetchTransaction();
   }, [transactionId]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!quantity || parseInt(quantity) <= 0) {
-      showMessage("Quantity must be a positive number", true);
-      return;
-    }
-
-    setLoading(true);
-    const body = {
-      productId: transaction.product.id,
-      quantity: parseInt(quantity),
-      description,
-      note,
-    };
-    if (transaction.supplier) {
-        body.supplierId = transaction.supplier.id;
-    }
-
-    try {
-      const response = await ApiService.updateTransaction(transactionId, body);
-      showMessage(response.message, false);
-      setTimeout(() => {
-          navigate(`/transaction/${transactionId}`);
-      }, 2000);
-    } catch (error) {
-      showMessage(
-        error.response?.data?.message || "Error updating transaction: " + error,
-        true
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const showMessage = (msg, isError = true) => {
+  const showMessage = (msg) => {
     setMessage(msg);
-    setTimeout(() => {
-      setMessage("");
-    }, 4000);
+    setTimeout(() => setMessage(""), 5000);
   };
 
-  if (!transaction) return <Layout><div className="loading">Loading...</div></Layout>;
+  if (!transaction) {
+    return (
+      <Layout>
+        <div className="purchase-form-page purchase-form-modern">
+          <p className="muted-text">Loading…</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  const typ = String(transaction.transactionType || "").toUpperCase();
 
   return (
     <Layout>
-      <div className="stock-in-container">
-        {message && (
-          <div className={`message-banner ${message.includes("Error") || message.includes("Insufficient") ? "error" : "success"}`}>
-            {message}
-          </div>
-        )}
+      <div className="purchase-form-page purchase-form-modern stock-io-page">
+        {message && <div className="message">{message}</div>}
 
-        <div className="form-card animate-fade-in">
-          <div className="form-header">
-            <h1>Update Transaction</h1>
-            <p>Modify transaction details. Stock quantities will be adjusted automatically.</p>
-          </div>
+        <h1>Update transaction</h1>
+        <div className="transaction-update-info">
+          <p>
+            <strong>#{transaction.id}</strong> · {transaction.transactionType} ·{" "}
+            {transaction.status}
+          </p>
+          <p className="muted-text">
+            The backend only supports <strong>status</strong> changes (and admin void with stock reversal).
+            Quantities and pricing on an existing row cannot be edited here. Use{" "}
+            <strong>Stock-in</strong> / <strong>Stock-out</strong> for new movements, or open{" "}
+            <strong>Details</strong> to update status or void (admin).
+          </p>
+        </div>
 
-          <div className="transaction-summary-box" style={{ padding: '15px', backgroundColor: '#f7fafc', borderRadius: '8px', marginBottom: '20px', border: '1px solid #e2e8f0' }}>
-             <p style={{ margin: '5px 0' }}><strong>Type:</strong> {transaction.transactionType}</p>
-             <p style={{ margin: '5px 0' }}><strong>Product:</strong> {transaction.product.name} (Current Stock: {transaction.product.stockQuantity})</p>
-             <p style={{ margin: '5px 0' }}><strong>Original Quantity:</strong> {transaction.totalProducts}</p>
-          </div>
+        <div className="section-card" style={{ marginBottom: 16 }}>
+          <p>
+            <span className="label">Product:</span> {transaction.product?.name || "—"}
+          </p>
+          <p>
+            <span className="label">Quantity:</span> {transaction.totalProducts}
+          </p>
+          <p>
+            <span className="label">Description:</span> {transaction.description ?? "—"}
+          </p>
+          <p>
+            <span className="label">Note:</span> {transaction.note ?? "—"}
+          </p>
+        </div>
 
-          <form onSubmit={handleSubmit} className="premium-form">
-            <div className="form-grid">
-              <div className="form-group full-width">
-                <label htmlFor="quantity">Quantity <span className="required">*</span></label>
-                <input
-                  id="quantity"
-                  type="number"
-                  min="1"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  required
-                  className="premium-input"
-                />
-              </div>
-
-              <div className="form-group full-width">
-                <label htmlFor="description">Description</label>
-                <input
-                  id="description"
-                  type="text"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="premium-input"
-                />
-              </div>
-
-              <div className="form-group full-width">
-                <label htmlFor="note">Notes</label>
-                <textarea
-                  id="note"
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  className="premium-input"
-                  rows="3"
-                />
-              </div>
-            </div>
-
-            <div className="form-actions">
-              <button type="button" className="secondary-btn" onClick={() => navigate(-1)}>Cancel</button>
-              <button type="submit" className="primary-btn" disabled={loading}>
-                  {loading ? "Updating..." : "Update Transaction"}
-              </button>
-            </div>
-          </form>
+        <div className="stock-io-actions">
+          <button type="button" className="btn btn-ghost btn-md" onClick={() => navigate(-1)}>
+            Back
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary btn-md"
+            onClick={() => navigate(`/transaction/${transactionId}`)}
+          >
+            Open details
+          </button>
+          {typ === "PURCHASE" && (
+            <button type="button" className="btn btn-secondary btn-md" onClick={() => navigate("/stock-in")}>
+              New stock-in
+            </button>
+          )}
+          {typ === "SALE" && (
+            <button type="button" className="btn btn-secondary btn-md" onClick={() => navigate("/stock-out")}>
+              New stock-out
+            </button>
+          )}
         </div>
       </div>
     </Layout>

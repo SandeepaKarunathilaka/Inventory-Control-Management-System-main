@@ -1,8 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import Layout from "../component/Layout";
 import ApiService from "../service/ApiService";
-import { jsPDF } from "jspdf";
+import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+
+const TYPE_OPTIONS = [
+  { value: "", label: "All types" },
+  { value: "PURCHASE", label: "Stock-in (purchase)" },
+  { value: "SALE", label: "Stock-out (sale)" },
+  { value: "RETURN_TO_SUPPLIER", label: "Return to supplier" },
+];
+
+const formatMoney = (n) => {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return "—";
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(v);
+};
 
 const TransactionReportPage = () => {
   const [startDate, setStartDate] = useState("");
@@ -11,272 +24,328 @@ const TransactionReportPage = () => {
   const [productName, setProductName] = useState("");
   const [supplierName, setSupplierName] = useState("");
   const [transactions, setTransactions] = useState([]);
-  const [filteredTransactions, setFilteredTransactions] = useState([]);
-  const [message, setMessage] = useState("");
+  const [banner, setBanner] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Summary state
-  const [summary, setSummary] = useState({
-    stockIn: 0,
-    stockOut: 0,
-    returned: 0,
-    totalValue: 0
-  });
+  const filteredTransactions = useMemo(() => {
+    let list = [...transactions];
+
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      list = list.filter((t) => {
+        const d = new Date(t.createdAt);
+        return d >= start && d <= end;
+      });
+    }
+
+    if (type) {
+      list = list.filter((t) => String(t.transactionType) === type);
+    }
+    if (productName.trim()) {
+      const q = productName.toLowerCase();
+      list = list.filter((t) => (t.product?.name || "").toLowerCase().includes(q));
+    }
+    if (supplierName.trim()) {
+      const q = supplierName.toLowerCase();
+      list = list.filter((t) => (t.supplier?.name || "").toLowerCase().includes(q));
+    }
+
+    return list;
+  }, [transactions, startDate, endDate, type, productName, supplierName]);
+
+  const summary = useMemo(() => {
+    let stockIn = 0;
+    let stockOut = 0;
+    let returned = 0;
+    let totalValue = 0;
+    filteredTransactions.forEach((t) => {
+      const qty = Number(t.totalProducts || 0);
+      const typ = String(t.transactionType);
+      if (typ === "PURCHASE") stockIn += qty;
+      if (typ === "SALE") stockOut += qty;
+      if (typ === "RETURN_TO_SUPPLIER") returned += qty;
+      totalValue += Number(t.totalPrice || 0);
+    });
+    return { stockIn, stockOut, returned, totalValue };
+  }, [filteredTransactions]);
+
+  const showBanner = (text, isError = false) => {
+    setBanner({ text, isError });
+    setTimeout(() => setBanner(null), 5000);
+  };
 
   const handleGenerate = async (e) => {
     e.preventDefault();
+    if (!startDate || !endDate) {
+      showBanner("Please select both start and end dates.", true);
+      return;
+    }
     setLoading(true);
     try {
       const response = await ApiService.getTransactionReport(startDate, endDate);
       if (response.status === 200) {
-        const data = response.transactions || [];
-        setTransactions(data);
-        applyLocalFilters(data, type, productName, supplierName);
-        showMessage("Report data fetched successfully", false);
+        setTransactions(response.transactions || []);
+        showBanner("Report data loaded. Adjust filters as needed.", false);
+      } else {
+        showBanner(response.message || "Could not load report", true);
       }
     } catch (error) {
-      showMessage(error.response?.data?.message || "Error generating report", true);
+      showBanner(error.response?.data?.message || "Error generating report", true);
     } finally {
       setLoading(false);
     }
   };
 
-  const applyLocalFilters = (data, filterType, filterProduct, filterSupplier) => {
-    let filtered = data;
-
-    if (filterType) {
-      filtered = filtered.filter(t => t.transactionType === filterType);
-    }
-    if (filterProduct) {
-      filtered = filtered.filter(t => t.product?.name?.toLowerCase().includes(filterProduct.toLowerCase()));
-    }
-    if (filterSupplier) {
-      filtered = filtered.filter(t => t.supplier?.name?.toLowerCase().includes(filterSupplier.toLowerCase()));
-    }
-
-    setFilteredTransactions(filtered);
-    calculateSummary(filtered);
-  };
-
-  useEffect(() => {
-      applyLocalFilters(transactions, type, productName, supplierName);
-  }, [type, productName, supplierName, transactions]);
-
-  const calculateSummary = (data) => {
-    let stockIn = 0;
-    let stockOut = 0;
-    let returned = 0;
-    let totalValue = 0;
-
-    data.forEach(t => {
-      if (t.transactionType === 'STOCK_IN') stockIn += t.totalProducts;
-      if (t.transactionType === 'STOCK_OUT' || t.transactionType === 'SALE') stockOut += t.totalProducts;
-      if (t.transactionType === 'RETURN_TO_SUPPLIER') returned += t.totalProducts;
-      
-      totalValue += t.totalPrice || 0;
-    });
-
-    setSummary({ stockIn, stockOut, returned, totalValue });
-  };
-
-  const showMessage = (msg, isError = false) => {
-    setMessage({ text: msg, isError });
-    setTimeout(() => setMessage(""), 4000);
-  };
-
   const exportToCSV = () => {
     if (filteredTransactions.length === 0) {
-        showMessage("No data to export", true);
-        return;
+      showBanner("No data to export", true);
+      return;
     }
-
-    const headers = ["ID", "Type", "Status", "Product", "Supplier", "Quantity", "Total Price", "Date"];
-    const rows = filteredTransactions.map(t => [
-        t.id,
-        t.transactionType,
-        t.status,
-        t.product?.name || 'N/A',
-        t.supplier?.name || 'N/A',
-        t.totalProducts,
-        t.totalPrice,
-        new Date(t.createdAt).toLocaleDateString()
-    ]);
-
-    let csvContent = "data:text/csv;charset=utf-8," 
-        + headers.join(",") + "\n"
-        + rows.map(e => e.join(",")).join("\n");
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "transaction_report.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const headers = [
+      "ID",
+      "Type",
+      "Status",
+      "Product",
+      "Supplier",
+      "Quantity",
+      "TotalPrice",
+      "Date",
+    ];
+    const escape = (v) => {
+      const s = v == null ? "" : String(v);
+      if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+      return s;
+    };
+    const lines = [headers.join(",")];
+    filteredTransactions.forEach((t) => {
+      lines.push(
+        [
+          t.id,
+          t.transactionType,
+          t.status,
+          t.product?.name || "N/A",
+          t.supplier?.name || "N/A",
+          t.totalProducts,
+          t.totalPrice,
+          new Date(t.createdAt).toISOString(),
+        ]
+          .map(escape)
+          .join(",")
+      );
+    });
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `transaction_report_${startDate}_${endDate}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showBanner("CSV downloaded.", false);
   };
 
   const exportToPDF = () => {
     if (filteredTransactions.length === 0) {
-        showMessage("No data to export", true);
-        return;
+      showBanner("No data to export", true);
+      return;
     }
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    doc.setFontSize(16);
+    doc.setTextColor(15, 23, 42);
+    doc.text("Inventory transaction report", 40, 44);
+    doc.setFontSize(10);
+    doc.setTextColor(71, 85, 105);
+    doc.text(`Range: ${startDate} → ${endDate}`, 40, 62);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 40, 76);
 
-    const doc = new jsPDF();
-    
-    // Add title
-    doc.setFontSize(18);
-    doc.text("Inventory Transaction Report", 14, 22);
-    
-    // Add Summary
     doc.setFontSize(11);
-    doc.text(`Total Stock-In: ${summary.stockIn}`, 14, 32);
-    doc.text(`Total Stock-Out: ${summary.stockOut}`, 14, 38);
-    doc.text(`Total Returned: ${summary.returned}`, 14, 44);
-    doc.text(`Total Value: Rs. ${summary.totalValue.toFixed(2)}`, 14, 50);
+    doc.setTextColor(15, 23, 42);
+    doc.text(`Stock-in (purchase) units: ${summary.stockIn}`, 40, 98);
+    doc.text(`Stock-out (sale) units: ${summary.stockOut}`, 40, 114);
+    doc.text(`Returned units: ${summary.returned}`, 40, 130);
+    doc.text(`Total value: ${formatMoney(summary.totalValue)}`, 40, 146);
 
-    // Prepare table data
     const tableColumn = ["ID", "Type", "Status", "Product", "Qty", "Price", "Date"];
-    const tableRows = [];
+    const tableRows = filteredTransactions.map((t) => [
+      String(t.id),
+      String(t.transactionType),
+      String(t.status ?? ""),
+      t.product?.name || "N/A",
+      String(t.totalProducts ?? ""),
+      formatMoney(t.totalPrice),
+      new Date(t.createdAt).toLocaleDateString(),
+    ]);
 
-    filteredTransactions.forEach(t => {
-      const transactionData = [
-        t.id,
-        t.transactionType,
-        t.status,
-        t.product?.name || 'N/A',
-        t.totalProducts,
-        `Rs. ${t.totalPrice?.toFixed(2)}`,
-        new Date(t.createdAt).toLocaleDateString()
-      ];
-      tableRows.push(transactionData);
-    });
-
-    // Generate table
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
-      startY: 56,
-      theme: 'grid',
+      startY: 164,
+      theme: "grid",
       styles: { fontSize: 8 },
-      headStyles: { fillColor: [41, 128, 185] }
+      headStyles: { fillColor: [0, 128, 128] },
     });
 
     doc.save("transaction_report.pdf");
+    showBanner("PDF downloaded.", false);
   };
 
   return (
     <Layout>
-      <div className="report-container" style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-        <h1 style={{ marginBottom: '20px', color: '#2d3748' }}>Generate Report</h1>
-        
-        {message && (
-          <div className={`message-banner ${message.isError ? "error" : "success"}`}>
-            {message.text}
+      <div className="transaction-report-page">
+        <h1 className="transaction-report-title">Transaction report</h1>
+
+        {banner && (
+          <div className={`transaction-report-banner ${banner.isError ? "is-error" : "is-success"}`}>
+            {banner.text}
           </div>
         )}
 
-        {/* Filter Section */}
-        <div className="form-card" style={{ marginBottom: '20px' }}>
-          <form onSubmit={handleGenerate} className="premium-form">
-            <div className="form-grid">
+        <div className="section-card transaction-report-filters">
+          <form onSubmit={handleGenerate}>
+            <div className="transaction-report-grid">
               <div className="form-group">
-                <label>Start Date</label>
-                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="premium-input" />
+                <label htmlFor="rep-start">Start date</label>
+                <input
+                  id="rep-start"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="premium-input"
+                  required
+                />
               </div>
               <div className="form-group">
-                <label>End Date</label>
-                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="premium-input" />
+                <label htmlFor="rep-end">End date</label>
+                <input
+                  id="rep-end"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="premium-input"
+                  required
+                />
               </div>
               <div className="form-group">
-                <label>Transaction Type</label>
-                <select value={type} onChange={(e) => setType(e.target.value)} className="premium-input">
-                  <option value="">All</option>
-                  <option value="STOCK_IN">Stock-In</option>
-                  <option value="STOCK_OUT">Stock-Out</option>
-                  <option value="RETURN_TO_SUPPLIER">Return</option>
+                <label htmlFor="rep-type">Transaction type</label>
+                <select
+                  id="rep-type"
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  className="premium-input"
+                >
+                  {TYPE_OPTIONS.map((o) => (
+                    <option key={o.value || "all"} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="form-group">
-                <label>Product Name</label>
-                <input type="text" placeholder="Filter by product" value={productName} onChange={(e) => setProductName(e.target.value)} className="premium-input" />
+                <label htmlFor="rep-product">Product name</label>
+                <input
+                  id="rep-product"
+                  type="text"
+                  placeholder="Contains…"
+                  value={productName}
+                  onChange={(e) => setProductName(e.target.value)}
+                  className="premium-input"
+                />
               </div>
-              <div className="form-group full-width">
-                <label>Supplier Name</label>
-                <input type="text" placeholder="Filter by supplier" value={supplierName} onChange={(e) => setSupplierName(e.target.value)} className="premium-input" />
+              <div className="form-group transaction-report-grid-span">
+                <label htmlFor="rep-supplier">Supplier name</label>
+                <input
+                  id="rep-supplier"
+                  type="text"
+                  placeholder="Contains…"
+                  value={supplierName}
+                  onChange={(e) => setSupplierName(e.target.value)}
+                  className="premium-input"
+                />
               </div>
             </div>
-            <div className="form-actions" style={{ marginTop: '20px' }}>
-              <button type="submit" className="primary-btn" disabled={loading}>
-                {loading ? "Fetching..." : "Fetch Report Data"}
+            <div className="transaction-report-actions">
+              <button type="submit" className="btn btn-primary btn-md" disabled={loading}>
+                {loading ? "Loading…" : "Load data"}
               </button>
             </div>
           </form>
         </div>
 
-        {/* Summary Section */}
         {filteredTransactions.length > 0 && (
-          <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
-            <div className="section-card" style={{ flex: 1, textAlign: 'center' }}>
-                <h3 style={{ margin: 0, color: '#718096', fontSize: '14px' }}>Total Stock-In</h3>
-                <p style={{ margin: '10px 0 0', fontSize: '24px', fontWeight: 'bold', color: '#38a169' }}>{summary.stockIn}</p>
+          <div className="transaction-report-summary-row">
+            <div className="section-card transaction-report-kpi">
+              <h3>Stock-in (purchase)</h3>
+              <p>{summary.stockIn}</p>
             </div>
-            <div className="section-card" style={{ flex: 1, textAlign: 'center' }}>
-                <h3 style={{ margin: 0, color: '#718096', fontSize: '14px' }}>Total Stock-Out</h3>
-                <p style={{ margin: '10px 0 0', fontSize: '24px', fontWeight: 'bold', color: '#e53e3e' }}>{summary.stockOut}</p>
+            <div className="section-card transaction-report-kpi">
+              <h3>Stock-out (sale)</h3>
+              <p>{summary.stockOut}</p>
             </div>
-            <div className="section-card" style={{ flex: 1, textAlign: 'center' }}>
-                <h3 style={{ margin: 0, color: '#718096', fontSize: '14px' }}>Total Returned</h3>
-                <p style={{ margin: '10px 0 0', fontSize: '24px', fontWeight: 'bold', color: '#dd6b20' }}>{summary.returned}</p>
+            <div className="section-card transaction-report-kpi">
+              <h3>Returned</h3>
+              <p>{summary.returned}</p>
             </div>
-            <div className="section-card" style={{ flex: 1, textAlign: 'center' }}>
-                <h3 style={{ margin: 0, color: '#718096', fontSize: '14px' }}>Total Value</h3>
-                <p style={{ margin: '10px 0 0', fontSize: '24px', fontWeight: 'bold', color: '#3182ce' }}>Rs. {summary.totalValue.toFixed(2)}</p>
+            <div className="section-card transaction-report-kpi">
+              <h3>Total value</h3>
+              <p>{formatMoney(summary.totalValue)}</p>
             </div>
           </div>
         )}
 
-        {/* Results Section */}
         {filteredTransactions.length > 0 ? (
           <div className="section-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h2>Preview ({filteredTransactions.length} records)</h2>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                    <button className="secondary-btn" onClick={exportToCSV}>Export CSV</button>
-                    <button className="primary-btn" onClick={exportToPDF}>Export PDF</button>
-                </div>
+            <div className="transaction-report-preview-head">
+              <h2>Preview ({filteredTransactions.length} records)</h2>
+              <div className="transaction-report-export-btns">
+                <button type="button" className="btn btn-secondary btn-md" onClick={exportToCSV}>
+                  Export CSV
+                </button>
+                <button type="button" className="btn btn-primary btn-md" onClick={exportToPDF}>
+                  Export PDF
+                </button>
+              </div>
             </div>
-            <div style={{ overflowX: 'auto' }}>
-                <table className="transactions-table">
+            <div className="transactions-table-wrap">
+              <table className="transactions-table">
                 <thead>
-                    <tr>
+                  <tr>
                     <th>ID</th>
-                    <th>TYPE</th>
-                    <th>PRODUCT</th>
-                    <th>QTY</th>
-                    <th>PRICE</th>
-                    <th>DATE</th>
-                    </tr>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Product</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Date</th>
+                  </tr>
                 </thead>
                 <tbody>
-                    {filteredTransactions.slice(0, 50).map(t => (
+                  {filteredTransactions.slice(0, 50).map((t) => (
                     <tr key={t.id}>
-                        <td>{t.id}</td>
-                        <td>{t.transactionType}</td>
-                        <td>{t.product?.name || 'N/A'}</td>
-                        <td>{t.totalProducts}</td>
-                        <td>Rs. {t.totalPrice?.toFixed(2)}</td>
-                        <td>{new Date(t.createdAt).toLocaleDateString()}</td>
+                      <td>{t.id}</td>
+                      <td>{t.transactionType}</td>
+                      <td>{t.status}</td>
+                      <td>{t.product?.name || "—"}</td>
+                      <td>{t.totalProducts}</td>
+                      <td>{formatMoney(t.totalPrice)}</td>
+                      <td>{new Date(t.createdAt).toLocaleDateString()}</td>
                     </tr>
-                    ))}
+                  ))}
                 </tbody>
-                </table>
-                {filteredTransactions.length > 50 && (
-                    <p style={{ textAlign: 'center', marginTop: '10px', color: '#718096' }}>Showing first 50 records. Export to view all.</p>
-                )}
+              </table>
             </div>
+            {filteredTransactions.length > 50 && (
+              <p className="muted-text transaction-report-footnote">
+                Showing first 50 rows. Export CSV or PDF for the full filtered set.
+              </p>
+            )}
           </div>
         ) : (
-            !loading && transactions.length > 0 && <p style={{ textAlign: 'center' }}>No records match the selected filters.</p>
+          !loading &&
+          transactions.length > 0 && (
+            <p className="muted-text transaction-report-empty">No rows match the current filters.</p>
+          )
         )}
       </div>
     </Layout>
