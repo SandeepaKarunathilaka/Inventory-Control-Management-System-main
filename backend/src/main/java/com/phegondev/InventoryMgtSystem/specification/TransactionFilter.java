@@ -80,20 +80,8 @@ public class TransactionFilter {
             Predicate monthPredicate = criteriaBuilder.equal(monthExpression, month);
             Predicate yearPredicate = criteriaBuilder.equal(yearExpression, year);
 
+            // Combine the month and year predicates
             return criteriaBuilder.and(monthPredicate, yearPredicate);
-        };
-    }
-
-    public static Specification<Transaction> byDateRange(java.time.LocalDateTime startDate, java.time.LocalDateTime endDate) {
-        return (root, query, criteriaBuilder) -> {
-            if (startDate != null && endDate != null) {
-                return criteriaBuilder.between(root.get("createdAt"), startDate, endDate);
-            } else if (startDate != null) {
-                return criteriaBuilder.greaterThanOrEqualTo(root.get("createdAt"), startDate);
-            } else if (endDate != null) {
-                return criteriaBuilder.lessThanOrEqualTo(root.get("createdAt"), endDate);
-            }
-            return criteriaBuilder.conjunction();
         };
     }
 }

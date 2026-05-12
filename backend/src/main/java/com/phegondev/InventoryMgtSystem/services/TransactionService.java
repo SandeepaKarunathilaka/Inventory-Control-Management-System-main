@@ -5,9 +5,9 @@ import com.phegondev.InventoryMgtSystem.dtos.TransactionRequest;
 import com.phegondev.InventoryMgtSystem.enums.TransactionStatus;
 
 public interface TransactionService {
-    Response stockIn(TransactionRequest transactionRequest);
+    Response purchase(TransactionRequest transactionRequest);
 
-    Response stockOut(TransactionRequest transactionRequest);
+    Response sell(TransactionRequest transactionRequest);
 
     Response returnToSupplier(TransactionRequest transactionRequest);
 
@@ -18,10 +18,4 @@ public interface TransactionService {
     Response getAllTransactionByMonthAndYear(int month, int year);
 
     Response updateTransactionStatus(Long transactionId, TransactionStatus status);
-
-    Response updateTransaction(Long id, TransactionRequest transactionRequest);
-
-    Response deleteTransaction(Long id);
-
-    Response getTransactionReport(String startDate, String endDate);
 }

@@ -9,12 +9,12 @@ import com.phegondev.InventoryMgtSystem.repositories.SupplierRepository;
 import com.phegondev.InventoryMgtSystem.services.SupplierService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
-import org.modelmapper.TypeToken;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,13 +23,38 @@ public class SupplierServiceImpl implements SupplierService {
 
 
     private final SupplierRepository supplierRepository;
-    private final ModelMapper modelMapper;
+
+    /** Explicit mapping avoids ModelMapper gaps with the {@link Supplier} entity shape. */
+    private static SupplierDTO copyToDto(Supplier s) {
+        SupplierDTO dto = new SupplierDTO();
+        dto.setId(s.getId());
+        dto.setName(s.getName());
+        dto.setContactInfo(s.getContactInfo());
+        dto.setAddress(s.getAddress());
+        dto.setEmail(s.getEmail());
+        dto.setPhone(s.getPhone());
+        dto.setCompany(s.getCompany());
+        dto.setNotes(s.getNotes());
+        dto.setGoodsSupplied(s.getGoodsSupplied());
+        dto.setQuantity(s.getQuantity());
+        return dto;
+    }
 
 
     @Override
+    @Transactional
     public Response addSupplier(SupplierDTO supplierDTO) {
 
-        Supplier supplierToSave = modelMapper.map(supplierDTO, Supplier.class);
+        Supplier supplierToSave = new Supplier();
+        supplierToSave.setName(supplierDTO.getName());
+        supplierToSave.setContactInfo(supplierDTO.getContactInfo());
+        supplierToSave.setAddress(supplierDTO.getAddress());
+        supplierToSave.setEmail(supplierDTO.getEmail());
+        supplierToSave.setPhone(supplierDTO.getPhone());
+        supplierToSave.setCompany(supplierDTO.getCompany());
+        supplierToSave.setNotes(supplierDTO.getNotes());
+        supplierToSave.setGoodsSupplied(supplierDTO.getGoodsSupplied());
+        supplierToSave.setQuantity(supplierDTO.getQuantity());
 
         supplierRepository.save(supplierToSave);
 
@@ -40,20 +65,31 @@ public class SupplierServiceImpl implements SupplierService {
     }
 
     @Override
+    @Transactional
     public Response updateSupplier(Long id, SupplierDTO supplierDTO) {
 
         Supplier existingSupplier = supplierRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Supplier Not Found"));
 
-        if (supplierDTO.getName() != null) existingSupplier.setName(supplierDTO.getName());
-        if (supplierDTO.getContactInfo() != null) existingSupplier.setContactInfo(supplierDTO.getContactInfo());
-        if (supplierDTO.getAddress() != null) existingSupplier.setAddress(supplierDTO.getAddress());
+        // Full replace from the request body so optional fields (email, phone, etc.) always persist
+        // and can be cleared with null — matches the add/edit form payload.
+        existingSupplier.setName(supplierDTO.getName());
+        existingSupplier.setContactInfo(supplierDTO.getContactInfo());
+        existingSupplier.setAddress(supplierDTO.getAddress());
+        existingSupplier.setEmail(supplierDTO.getEmail());
+        existingSupplier.setPhone(supplierDTO.getPhone());
+        existingSupplier.setCompany(supplierDTO.getCompany());
+        existingSupplier.setNotes(supplierDTO.getNotes());
+        existingSupplier.setGoodsSupplied(supplierDTO.getGoodsSupplied());
+        existingSupplier.setQuantity(supplierDTO.getQuantity());
 
-        supplierRepository.save(existingSupplier);
+        Supplier saved = supplierRepository.save(existingSupplier);
+        SupplierDTO updatedDto = copyToDto(saved);
 
         return Response.builder()
                 .status(200)
                 .message("Supplier Was Successfully Updated")
+                .supplier(updatedDto)
                 .build();
     }
 
@@ -62,8 +98,7 @@ public class SupplierServiceImpl implements SupplierService {
 
         List<Supplier> suppliers = supplierRepository.findAll(Sort.by(Sort.Direction.DESC, "id"));
 
-        List<SupplierDTO> supplierDTOList = modelMapper.map(suppliers, new TypeToken<List<SupplierDTO>>() {
-        }.getType());
+        List<SupplierDTO> supplierDTOList = suppliers.stream().map(SupplierServiceImpl::copyToDto).collect(Collectors.toList());
 
         return Response.builder()
                 .status(200)
@@ -78,7 +113,7 @@ public class SupplierServiceImpl implements SupplierService {
         Supplier supplier = supplierRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Supplier Not Found"));
 
-        SupplierDTO supplierDTO = modelMapper.map(supplier, SupplierDTO.class);
+        SupplierDTO supplierDTO = copyToDto(supplier);
 
         return Response.builder()
                 .status(200)

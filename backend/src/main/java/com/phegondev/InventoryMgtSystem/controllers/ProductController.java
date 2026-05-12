@@ -4,7 +4,6 @@ package com.phegondev.InventoryMgtSystem.controllers;
 import com.phegondev.InventoryMgtSystem.dtos.ProductDTO;
 import com.phegondev.InventoryMgtSystem.dtos.Response;
 import com.phegondev.InventoryMgtSystem.services.ProductService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -14,10 +13,13 @@ import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/products")
-@RequiredArgsConstructor
 public class ProductController {
 
     private final ProductService productService;
+
+    public ProductController(ProductService productService) {
+        this.productService = productService;
+    }
 
     @PostMapping("/add")
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -28,6 +30,7 @@ public class ProductController {
             @RequestParam("price") BigDecimal price,
             @RequestParam("stockQuantity") Integer stockQuantity,
             @RequestParam("categoryId") Long categoryId,
+            @RequestParam("supplierId") Long supplierId,
             @RequestParam(value = "description", required = false) String description
     ) {
         ProductDTO productDTO = new ProductDTO();
@@ -36,6 +39,7 @@ public class ProductController {
         productDTO.setPrice(price);
         productDTO.setStockQuantity(stockQuantity);
         productDTO.setCategoryId(categoryId);
+        productDTO.setSupplierId(supplierId);
         productDTO.setDescription(description);
 
         return ResponseEntity.ok(productService.saveProduct(productDTO, imageFile));
@@ -51,6 +55,7 @@ public class ProductController {
             @RequestParam(value = "price", required = false) BigDecimal price,
             @RequestParam(value = "stockQuantity", required = false) Integer stockQuantity,
             @RequestParam(value = "categoryId", required = false) Long categoryId,
+            @RequestParam(value = "supplierId", required = false) Long supplierId,
             @RequestParam(value = "description", required = false) String description,
             @RequestParam("productId") Long productId
     ) {
@@ -61,6 +66,7 @@ public class ProductController {
         productDTO.setProductId(productId);
         productDTO.setStockQuantity(stockQuantity);
         productDTO.setCategoryId(categoryId);
+        productDTO.setSupplierId(supplierId);
         productDTO.setDescription(description);
 
         return ResponseEntity.ok(productService.updateProduct(productDTO, imageFile));
