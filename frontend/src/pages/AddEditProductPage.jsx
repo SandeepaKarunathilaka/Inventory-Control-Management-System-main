@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Layout from "../component/Layout";
 import ApiService from "../service/ApiService";
 import { useNavigate, useParams } from "react-router-dom";
+import { normalizeSupplierRow } from "../utils/normalizeSupplier";
 
 const AddEditProductPage = () => {
   const { productId } = useParams("");
@@ -10,11 +11,13 @@ const AddEditProductPage = () => {
   const [price, setPrice] = useState("");
   const [stockQuantity, setStokeQuantity] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [supplierId, setSupplierId] = useState("");
   const [description, setDescription] = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [imageUrl, setImageUrl] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
   const [message, setMessage] = useState("");
 
   const navigate = useNavigate();
@@ -31,6 +34,17 @@ const AddEditProductPage = () => {
         );
       }
     };
+    const fetchSuppliers = async () => {
+      try {
+        const suppliersData = await ApiService.getAllSuppliers();
+        setSuppliers((suppliersData.suppliers || []).map(normalizeSupplierRow));
+      } catch (error) {
+        showMessage(
+          error.response?.data?.message ||
+            "Error Getting all Suppliers: " + error
+        );
+      }
+    };
 
     const fetProductById = async () => {
       if (productId) {
@@ -43,6 +57,7 @@ const AddEditProductPage = () => {
             setPrice(productData.product.price);
             setStokeQuantity(productData.product.stockQuantity);
             setCategoryId(productData.product.categoryId);
+            setSupplierId(productData.product.supplierId || "");
             setDescription(productData.product.description);
             setImageUrl(productData.product.imageUrl);
           } else {
@@ -58,6 +73,7 @@ const AddEditProductPage = () => {
     };
 
     fetchCategories();
+    fetchSuppliers();
     if (productId) fetProductById();
   }, [productId]);
 
@@ -85,6 +101,7 @@ const AddEditProductPage = () => {
     formData.append("price", price);
     formData.append("stockQuantity", stockQuantity);
     formData.append("categoryId", categoryId);
+    formData.append("supplierId", supplierId);
     formData.append("description", description);
     if (imageFile) {
       formData.append("imageFile", imageFile);
@@ -135,23 +152,42 @@ const AddEditProductPage = () => {
           </div>
 
           <div className="form-group">
+            <label>Price (USD $)</label>
+            <div className="currency-input">
+              <span className="currency-prefix">$</span>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="0.00"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
             <label>Stock Quantity</label>
             <input
               type="number"
+              min="0"
               value={stockQuantity}
               onChange={(e) => setStokeQuantity(e.target.value)}
               required
             />
-          </div>
-
-          <div className="form-group">
-            <label>Price</label>
-            <input
-              type="number"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              required
-            />
+            <p className="availability-helper">
+              Availability Status:{" "}
+              <span
+                className={
+                  Number(stockQuantity) > 0
+                    ? "availability-badge in-stock"
+                    : "availability-badge out-of-stock"
+                }
+              >
+                {Number(stockQuantity) > 0 ? "In Stock" : "Out of Stock"}
+              </span>
+            </p>
           </div>
 
           <div className="form-group">
@@ -176,6 +212,22 @@ const AddEditProductPage = () => {
               {categories.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Supplier</label>
+            <select
+              value={supplierId}
+              onChange={(e) => setSupplierId(e.target.value)}
+              required
+            >
+              <option value="">Select a supplier</option>
+              {suppliers.map((supplier) => (
+                <option key={supplier.id} value={supplier.id}>
+                  {supplier.name}
                 </option>
               ))}
             </select>

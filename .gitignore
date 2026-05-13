@@ -15,3 +15,8 @@ dist/
 .idea/
 .vscode/
 .DS_Store
+/frontend/node_modules
+/backend/node_modules
+/frontend/build
+/backend/target
+/backend/src/main/resources/application-local.properties
