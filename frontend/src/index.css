@@ -207,6 +207,67 @@ body {
   font-weight: 400 !important;
 }
 
+/* MODERN FIELD VALIDATION */
+
+.input-error {
+  border: 1px solid #dc2626 !important;
+  background: rgba(255, 230, 230, 0.7) !important;
+}
+
+.input-error:focus {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.12) !important;
+}
+
+.field-error {
+  color: #dc2626;
+  font-size: 0.84rem;
+  font-weight: 600;
+  margin-top: -2px;
+  padding-left: 2px;
+  animation: fadeIn 0.2s ease;
+}
+
+.password-hint {
+  color: #64748b;
+  font-size: 0.82rem;
+  margin-top: -2px;
+  padding-left: 2px;
+}
+
+.form-group-auth {
+  position: relative;
+}
+
+/* PASSWORD INPUT STYLING */
+
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-wrapper input {
+  padding-right: 80px;
+}
+
+.show-password-btn {
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #6b7280;
+  cursor: pointer;
+  user-select: none;
+  letter-spacing: 1px;
+  transition: color 0.2s ease;
+}
+
+.show-password-btn:hover {
+  color: #008080;
+}
+
 @media (max-width: 576px) {
   .auth-container {
     padding: 24px 18px;
