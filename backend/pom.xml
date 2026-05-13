@@ -52,6 +52,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- H2 database driver for the default local/test datasource -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -132,7 +139,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>com.phegondev.InventoryMgtSystem.InventoryMgtSystemApplication</mainClass>
+                    <mainClass>com.inventory.InventoryApplication</mainClass>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
