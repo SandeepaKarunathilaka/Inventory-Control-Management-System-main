@@ -1,12 +1,9 @@
 package com.phegondev.InventoryMgtSystem.services.impl;
 
-import com.phegondev.InventoryMgtSystem.dtos.ForgotPasswordRequest;
 import com.phegondev.InventoryMgtSystem.dtos.LoginRequest;
 import com.phegondev.InventoryMgtSystem.dtos.RegisterRequest;
-import com.phegondev.InventoryMgtSystem.dtos.ResetPasswordRequest;
 import com.phegondev.InventoryMgtSystem.dtos.Response;
 import com.phegondev.InventoryMgtSystem.dtos.UserDTO;
-import com.phegondev.InventoryMgtSystem.dtos.VerifyOtpRequest;
 import com.phegondev.InventoryMgtSystem.enums.UserRole;
 import com.phegondev.InventoryMgtSystem.exceptions.InvalidCredentialsException;
 import com.phegondev.InventoryMgtSystem.exceptions.NotFoundException;
@@ -25,9 +22,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -39,12 +33,11 @@ public class UserServiceImpl implements UserService {
     private final ModelMapper modelMapper;
     private final JwtUtils jwtUtils;
 
-    private final Map<String, String> otpStorage = new ConcurrentHashMap<>();
 
     @Override
     public Response registerUser(RegisterRequest registerRequest) {
 
-        UserRole role = UserRole.WAREHOUSE_MANAGER;
+        UserRole role = UserRole.MANAGER;
 
         if (registerRequest.getRole() != null) {
             role = registerRequest.getRole();
@@ -75,7 +68,6 @@ public class UserServiceImpl implements UserService {
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new InvalidCredentialsException("Password Does Not Match");
         }
-
         String token = jwtUtils.generateToken(user.getEmail());
 
         return Response.builder()
@@ -110,8 +102,7 @@ public class UserServiceImpl implements UserService {
 
         String email = authentication.getName();
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("User Not Found"));
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("User Not Found"));
 
         user.setTransactions(null);
 
@@ -121,8 +112,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Response getUserById(Long id) {
 
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("User Not Found"));
+        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("User Not Found"));
 
         UserDTO userDTO = modelMapper.map(user, UserDTO.class);
 
@@ -138,8 +128,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Response updateUser(Long id, UserDTO userDTO) {
 
-        User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("User Not Found"));
+        User existingUser = userRepository.findById(id).orElseThrow(() -> new NotFoundException("User Not Found"));
 
         if (userDTO.getEmail() != null) existingUser.setEmail(userDTO.getEmail());
         if (userDTO.getPhoneNumber() != null) existingUser.setPhoneNumber(userDTO.getPhoneNumber());
@@ -149,7 +138,6 @@ public class UserServiceImpl implements UserService {
         if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
             existingUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         }
-
         userRepository.save(existingUser);
 
         return Response.builder()
@@ -160,8 +148,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Response deleteUser(Long id) {
-        userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("User Not Found"));
+        userRepository.findById(id).orElseThrow(() -> new NotFoundException("User Not Found"));
 
         userRepository.deleteById(id);
 
@@ -169,13 +156,13 @@ public class UserServiceImpl implements UserService {
                 .status(200)
                 .message("User successfully Deleted")
                 .build();
+
     }
 
     @Override
     public Response getUserTransactions(Long id) {
 
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("User Not Found"));
+        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("User Not Found"));
 
         UserDTO userDTO = modelMapper.map(user, UserDTO.class);
 
@@ -189,73 +176,5 @@ public class UserServiceImpl implements UserService {
                 .message("success")
                 .user(userDTO)
                 .build();
-    }
-
-    @Override
-    public Response forgotPassword(ForgotPasswordRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new NotFoundException("Email not found"));
-
-        String otp = generateOtp();
-        otpStorage.put(request.getEmail(), otp);
-
-        System.out.println("======================================");
-        System.out.println("OTP for " + request.getEmail() + " is: " + otp);
-        System.out.println("======================================");
-
-        return Response.builder()
-                .status(200)
-                .message("OTP generated successfully. Check backend console.")
-                .build();
-    }
-
-    @Override
-    public Response verifyOtp(VerifyOtpRequest request) {
-        String storedOtp = otpStorage.get(request.getEmail());
-
-        if (storedOtp == null) {
-            throw new NotFoundException("OTP not found for this email");
-        }
-
-        if (!storedOtp.equals(request.getOtp())) {
-            throw new InvalidCredentialsException("Invalid OTP");
-        }
-
-        return Response.builder()
-                .status(200)
-                .message("OTP verified successfully")
-                .build();
-    }
-
-    @Override
-    public Response resetPassword(ResetPasswordRequest request) {
-        String storedOtp = otpStorage.get(request.getEmail());
-
-        if (storedOtp == null) {
-            throw new NotFoundException("OTP not found for this email");
-        }
-
-        if (!storedOtp.equals(request.getOtp())) {
-            throw new InvalidCredentialsException("Invalid OTP");
-        }
-
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new NotFoundException("User not found"));
-
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        userRepository.save(user);
-
-        otpStorage.remove(request.getEmail());
-
-        return Response.builder()
-                .status(200)
-                .message("Password reset successful")
-                .build();
-    }
-
-    private String generateOtp() {
-        Random random = new Random();
-        int otpNumber = 100000 + random.nextInt(900000);
-        return String.valueOf(otpNumber);
     }
 }
