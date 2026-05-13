@@ -1,22 +1,25 @@
-# Backend build files
-backend/target/
-backend/data/
+# Backend
 target/
+backend/target/
 
-# Frontend dependencies/build
-frontend/node_modules/
-frontend/dist/
+# Frontend
 node_modules/
+frontend/node_modules/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+
+# Build folders
+build/
 dist/
 
-# Environment and IDE
-.env
-*.log
-.idea/
+# IDE files
 .vscode/
-.DS_Store
-/frontend/node_modules
-/backend/node_modules
-/frontend/build
-/backend/target
-/backend/src/main/resources/application-local.properties
+.idea/

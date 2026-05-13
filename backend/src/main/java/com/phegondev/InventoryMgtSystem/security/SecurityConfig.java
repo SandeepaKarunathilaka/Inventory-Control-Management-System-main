@@ -27,34 +27,65 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final AuthFilter authFilter;
-    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
-    private final CustomAccessDenialHandler customAccessDenialHandler;
+
+    private final CustomAuthenticationEntryPoint
+            customAuthenticationEntryPoint;
+
+    private final CustomAccessDenialHandler
+            customAccessDenialHandler;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.csrf(AbstractHttpConfigurer::disable)
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity httpSecurity) throws Exception {
+
+        httpSecurity
+                .csrf(AbstractHttpConfigurer::disable)
+
                 .cors(Customizer.withDefaults())
+
                 .exceptionHandling(exception -> exception
-                        .accessDeniedHandler(customAccessDenialHandler)
-                        .authenticationEntryPoint(customAuthenticationEntryPoint)
+                        .accessDeniedHandler(
+                                customAccessDenialHandler)
+
+                        .authenticationEntryPoint(
+                                customAuthenticationEntryPoint)
                 )
+
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/api/auth/**", "/product-images/**").permitAll()
+
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/api/warehouses/**"
+                        , "/product-images/**").permitAll()
+
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);
-        return httpSecurity.build();
 
+                .sessionManagement(manager ->
+                        manager.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS)
+                )
+
+                .addFilterBefore(
+                        authFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
+
+        return httpSecurity.build();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
+
         return new BCryptPasswordEncoder();
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
+
+        return authenticationConfiguration
+                .getAuthenticationManager();
     }
 }

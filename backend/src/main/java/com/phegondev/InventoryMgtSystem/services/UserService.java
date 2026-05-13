@@ -1,9 +1,12 @@
 package com.phegondev.InventoryMgtSystem.services;
 
+import com.phegondev.InventoryMgtSystem.dtos.ForgotPasswordRequest;
 import com.phegondev.InventoryMgtSystem.dtos.LoginRequest;
 import com.phegondev.InventoryMgtSystem.dtos.RegisterRequest;
+import com.phegondev.InventoryMgtSystem.dtos.ResetPasswordRequest;
 import com.phegondev.InventoryMgtSystem.dtos.Response;
 import com.phegondev.InventoryMgtSystem.dtos.UserDTO;
+import com.phegondev.InventoryMgtSystem.dtos.VerifyOtpRequest;
 import com.phegondev.InventoryMgtSystem.models.User;
 
 public interface UserService {
@@ -22,4 +25,10 @@ public interface UserService {
     Response deleteUser(Long id);
 
     Response getUserTransactions(Long id);
+
+    Response forgotPassword(ForgotPasswordRequest request);
+
+    Response verifyOtp(VerifyOtpRequest request);
+
+    Response resetPassword(ResetPasswordRequest request);
 }

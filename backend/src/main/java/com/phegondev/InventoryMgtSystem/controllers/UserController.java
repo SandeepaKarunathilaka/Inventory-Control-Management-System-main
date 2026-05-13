@@ -9,12 +9,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
-
 
     private final UserService userService;
 
@@ -46,11 +44,8 @@ public class UserController {
     }
 
     @GetMapping("/current")
-    public ResponseEntity<User> getCurrentUser(){
+    public ResponseEntity<User> getCurrentUser() {
         return ResponseEntity.ok(userService.getCurrentLoggedInUser());
     }
-
-
-
 
 }
