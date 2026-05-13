@@ -6,6 +6,7 @@ import com.phegondev.InventoryMgtSystem.dtos.TransactionDTO;
 import com.phegondev.InventoryMgtSystem.dtos.TransactionRequest;
 import com.phegondev.InventoryMgtSystem.enums.TransactionStatus;
 import com.phegondev.InventoryMgtSystem.enums.TransactionType;
+import com.phegondev.InventoryMgtSystem.enums.UserRole;
 import com.phegondev.InventoryMgtSystem.exceptions.NameValueRequiredException;
 import com.phegondev.InventoryMgtSystem.exceptions.NotFoundException;
 import com.phegondev.InventoryMgtSystem.models.Product;
@@ -28,6 +29,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -45,7 +47,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final ModelMapper modelMapper;
 
     @Override
-    public Response stockIn(TransactionRequest transactionRequest) {
+    public Response purchase(TransactionRequest transactionRequest) {
 
         Long productId = transactionRequest.getProductId();
         Long supplierId = transactionRequest.getSupplierId();
@@ -67,7 +69,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         //create a transaction
         Transaction transaction = Transaction.builder()
-                .transactionType(TransactionType.STOCK_IN)
+                .transactionType(TransactionType.PURCHASE)
                 .status(TransactionStatus.COMPLETED)
                 .product(product)
                 .user(user)
@@ -78,16 +80,19 @@ public class TransactionServiceImpl implements TransactionService {
                 .note(transactionRequest.getNote())
                 .build();
 
-        transactionRepository.save(transaction);
+        Transaction saved = transactionRepository.save(transaction);
+        TransactionDTO created = new TransactionDTO();
+        created.setId(saved.getId());
         return Response.builder()
                 .status(200)
-                .message("Stock-in recorded successfully")
+                .message("Purchase Made successfully")
+                .transaction(created)
                 .build();
 
     }
 
     @Override
-    public Response stockOut(TransactionRequest transactionRequest) {
+    public Response sell(TransactionRequest transactionRequest) {
 
         Long productId = transactionRequest.getProductId();
         Integer quantity = transactionRequest.getQuantity();
@@ -95,11 +100,11 @@ public class TransactionServiceImpl implements TransactionService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new NotFoundException("Product Not Found"));
 
-        User user = userService.getCurrentLoggedInUser();
-
         if (product.getStockQuantity() < quantity) {
-            throw new NameValueRequiredException("Insufficient stock available");
+            throw new NameValueRequiredException("Insufficient stock. Available: " + product.getStockQuantity());
         }
+
+        User user = userService.getCurrentLoggedInUser();
 
         //update the stock quantity and re-save
         product.setStockQuantity(product.getStockQuantity() - quantity);
@@ -108,7 +113,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         //create a transaction
         Transaction transaction = Transaction.builder()
-                .transactionType(TransactionType.STOCK_OUT)
+                .transactionType(TransactionType.SALE)
                 .status(TransactionStatus.COMPLETED)
                 .product(product)
                 .user(user)
@@ -118,10 +123,13 @@ public class TransactionServiceImpl implements TransactionService {
                 .note(transactionRequest.getNote())
                 .build();
 
-        transactionRepository.save(transaction);
+        Transaction saved = transactionRepository.save(transaction);
+        TransactionDTO created = new TransactionDTO();
+        created.setId(saved.getId());
         return Response.builder()
                 .status(200)
-                .message("Stock-out recorded successfully")
+                .message("Product Sale successfully made")
+                .transaction(created)
                 .build();
 
 
@@ -155,17 +163,21 @@ public class TransactionServiceImpl implements TransactionService {
                 .status(TransactionStatus.PROCESSING)
                 .product(product)
                 .user(user)
+                .supplier(supplier)
                 .totalProducts(quantity)
                 .totalPrice(BigDecimal.ZERO)
                 .description(transactionRequest.getDescription())
                 .note(transactionRequest.getNote())
                 .build();
 
-        transactionRepository.save(transaction);
+        Transaction saved = transactionRepository.save(transaction);
+        TransactionDTO created = new TransactionDTO();
+        created.setId(saved.getId());
 
         return Response.builder()
                 .status(200)
                 .message("Product Returned in progress")
+                .transaction(created)
                 .build();
 
     }
@@ -182,11 +194,8 @@ public class TransactionServiceImpl implements TransactionService {
         List<TransactionDTO> transactionDTOS = modelMapper.map(transactionPage.getContent(), new TypeToken<List<TransactionDTO>>() {
         }.getType());
 
-        transactionDTOS.forEach(transactionDTO -> {
-            transactionDTO.setUser(null);
-            transactionDTO.setProduct(null);
-            transactionDTO.setSupplier(null);
-        });
+        // Keep product + supplier on list rows for UI traceability; omit user summary fields only
+        transactionDTOS.forEach(transactionDTO -> transactionDTO.setUser(null));
 
         return Response.builder()
                 .status(200)
@@ -222,11 +231,7 @@ public class TransactionServiceImpl implements TransactionService {
         List<TransactionDTO> transactionDTOS = modelMapper.map(transactions, new TypeToken<List<TransactionDTO>>() {
         }.getType());
 
-        transactionDTOS.forEach(transactionDTO -> {
-            transactionDTO.setUser(null);
-            transactionDTO.setProduct(null);
-            transactionDTO.setSupplier(null);
-        });
+        transactionDTOS.forEach(transactionDTO -> transactionDTO.setUser(null));
 
         return Response.builder()
                 .status(200)
@@ -236,10 +241,26 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    @Transactional
     public Response updateTransactionStatus(Long transactionId, TransactionStatus status) {
 
         Transaction existingTransaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new NotFoundException("Transaction Not Found"));
+
+        if (existingTransaction.getStatus() == TransactionStatus.CANCELLED
+                && status != TransactionStatus.CANCELLED) {
+            throw new NameValueRequiredException("Cancelled transactions cannot be reactivated.");
+        }
+
+        if (status == TransactionStatus.CANCELLED
+                && existingTransaction.getStatus() != TransactionStatus.CANCELLED) {
+            User actor = userService.getCurrentLoggedInUser();
+            if (actor.getRole() != UserRole.ADMIN) {
+                throw new NameValueRequiredException(
+                        "Only administrators can void (cancel) transactions and reverse stock.");
+            }
+            applyStockReversalForCancellation(existingTransaction);
+        }
 
         existingTransaction.setStatus(status);
         existingTransaction.setUpdateAt(LocalDateTime.now());
@@ -250,105 +271,36 @@ public class TransactionServiceImpl implements TransactionService {
                 .status(200)
                 .message("Transaction Status Successfully Updated")
                 .build();
-
-
     }
 
-    @Override
-    public Response updateTransaction(Long id, TransactionRequest transactionRequest) {
-
-        Transaction transaction = transactionRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Transaction Not Found"));
-
-        Product product = transaction.getProduct();
-
-        int oldQuantity = transaction.getTotalProducts();
-        int newQuantity = transactionRequest.getQuantity();
-        int stockAdjustment = 0;
-
-        if (transaction.getTransactionType() == TransactionType.STOCK_IN) {
-            stockAdjustment = newQuantity - oldQuantity;
-        } else if (transaction.getTransactionType() == TransactionType.STOCK_OUT || transaction.getTransactionType() == TransactionType.RETURN_TO_SUPPLIER) {
-            stockAdjustment = oldQuantity - newQuantity;
+    /**
+     * Undo inventory movement for this transaction when it is voided (status CANCELLED).
+     * PURCHASE had increased stock; SALE and RETURN_TO_SUPPLIER had decreased stock.
+     */
+    private void applyStockReversalForCancellation(Transaction tx) {
+        if (tx.getProduct() == null) {
+            throw new NameValueRequiredException("Transaction has no linked product; cannot reverse stock.");
         }
+        Product product = productRepository.findById(tx.getProduct().getId())
+                .orElseThrow(() -> new NotFoundException("Product Not Found"));
+        int qty = tx.getTotalProducts() != null ? tx.getTotalProducts() : 0;
+        int current = product.getStockQuantity() != null ? product.getStockQuantity() : 0;
 
-        int newStockQuantity = product.getStockQuantity() + stockAdjustment;
-
-        if (newStockQuantity < 0) {
-            throw new NameValueRequiredException("Insufficient stock available for this update");
-        }
-
-        product.setStockQuantity(newStockQuantity);
-        productRepository.save(product);
-
-        transaction.setTotalProducts(newQuantity);
-        transaction.setTotalPrice(product.getPrice().multiply(BigDecimal.valueOf(newQuantity)));
-        transaction.setDescription(transactionRequest.getDescription());
-        transaction.setNote(transactionRequest.getNote());
-        transaction.setUpdateAt(LocalDateTime.now());
-
-        transactionRepository.save(transaction);
-
-        return Response.builder()
-                .status(200)
-                .message("Transaction Updated Successfully")
-                .build();
-    }
-
-    @Override
-    public Response deleteTransaction(Long id) {
-        Transaction transaction = transactionRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Transaction Not Found"));
-
-        Product product = transaction.getProduct();
-
-        int quantity = transaction.getTotalProducts();
-        int newStockQuantity = product.getStockQuantity();
-
-        if (transaction.getTransactionType() == TransactionType.STOCK_IN) {
-            newStockQuantity -= quantity;
-            if (newStockQuantity < 0) {
-                throw new NameValueRequiredException("Insufficient stock to reverse this stock-in transaction");
+        switch (tx.getTransactionType()) {
+            case PURCHASE -> {
+                int next = current - qty;
+                if (next < 0) {
+                    throw new NameValueRequiredException(
+                            "Cannot void purchase: resulting stock would be negative. Adjust stock first.");
+                }
+                product.setStockQuantity(next);
             }
-        } else if (transaction.getTransactionType() == TransactionType.STOCK_OUT || transaction.getTransactionType() == TransactionType.RETURN_TO_SUPPLIER) {
-            newStockQuantity += quantity;
+            case SALE, RETURN_TO_SUPPLIER -> product.setStockQuantity(current + qty);
+            default -> throw new NameValueRequiredException(
+                    "Unsupported transaction type for void: " + tx.getTransactionType());
         }
-
-        product.setStockQuantity(newStockQuantity);
         productRepository.save(product);
-
-        transactionRepository.delete(transaction);
-
-        return Response.builder()
-                .status(200)
-                .message("Transaction Deleted Successfully")
-                .build();
     }
 
-    @Override
-    public Response getTransactionReport(String startDate, String endDate) {
-        Specification<Transaction> spec = Specification.where(null);
-        
-        if (startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty()) {
-            LocalDateTime start = LocalDateTime.parse(startDate + "T00:00:00");
-            LocalDateTime end = LocalDateTime.parse(endDate + "T23:59:59");
-            spec = TransactionFilter.byDateRange(start, end);
-        }
-
-        List<Transaction> transactions = transactionRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "id"));
-
-        List<TransactionDTO> transactionDTOS = modelMapper.map(transactions, new TypeToken<List<TransactionDTO>>() {
-        }.getType());
-
-        transactionDTOS.forEach(dto -> {
-            if (dto.getUser() != null) dto.getUser().setTransactions(null);
-        });
-
-        return Response.builder()
-                .status(200)
-                .message("Report generated successfully")
-                .transactions(transactionDTOS)
-                .build();
-    }
 
 }

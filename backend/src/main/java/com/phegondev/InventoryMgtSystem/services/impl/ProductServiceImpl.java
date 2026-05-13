@@ -6,13 +6,14 @@ import com.phegondev.InventoryMgtSystem.dtos.Response;
 import com.phegondev.InventoryMgtSystem.exceptions.NotFoundException;
 import com.phegondev.InventoryMgtSystem.models.Category;
 import com.phegondev.InventoryMgtSystem.models.Product;
+import com.phegondev.InventoryMgtSystem.models.Supplier;
 import com.phegondev.InventoryMgtSystem.repositories.CategoryRepository;
 import com.phegondev.InventoryMgtSystem.repositories.ProductRepository;
+import com.phegondev.InventoryMgtSystem.repositories.SupplierRepository;
 import com.phegondev.InventoryMgtSystem.services.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.modelmapper.TypeToken;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,15 +31,21 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final ModelMapper modelMapper;
     private final CategoryRepository categoryRepository;
+    private final SupplierRepository supplierRepository;
 
     // Save images under backend folder (works on any OS); served at /product-images/**
     private static final String IMAGE_DIRECTORY = System.getProperty("user.dir") + "/product-images/";
 
     @Override
     public Response saveProduct(ProductDTO productDTO, MultipartFile imageFile) {
+        if (productDTO.getSupplierId() == null) {
+            throw new IllegalArgumentException("Supplier Id is required");
+        }
 
         Category category = categoryRepository.findById(productDTO.getCategoryId())
                 .orElseThrow(() -> new NotFoundException("Category Not Found"));
+        Supplier supplier = supplierRepository.findById(productDTO.getSupplierId())
+                .orElseThrow(() -> new NotFoundException("Supplier Not Found"));
 
         //map our dto to product entity
         Product productToSave = Product.builder()
@@ -48,6 +55,7 @@ public class ProductServiceImpl implements ProductService {
                 .stockQuantity(productDTO.getStockQuantity())
                 .description(productDTO.getDescription())
                 .category(category)
+                .supplier(supplier)
                 .build();
 
         if (imageFile != null && !imageFile.isEmpty()) {
@@ -87,6 +95,12 @@ public class ProductServiceImpl implements ProductService {
             existingProduct.setCategory(category);
         }
 
+        if (productDTO.getSupplierId() != null && productDTO.getSupplierId() > 0) {
+            Supplier supplier = supplierRepository.findById(productDTO.getSupplierId())
+                    .orElseThrow(() -> new NotFoundException("Supplier Not Found"));
+            existingProduct.setSupplier(supplier);
+        }
+
         //check if product fields is to be changed and update
         if (productDTO.getName() != null && !productDTO.getName().isBlank()) {
             existingProduct.setName(productDTO.getName());
@@ -124,8 +138,9 @@ public class ProductServiceImpl implements ProductService {
 
         List<Product> productList = productRepository.findAll(Sort.by(Sort.Direction.DESC, "id"));
 
-        List<ProductDTO> productDTOList = modelMapper.map(productList, new TypeToken<List<ProductDTO>>() {
-        }.getType());
+        List<ProductDTO> productDTOList = productList.stream()
+                .map(this::toProductDTO)
+                .toList();
 
         return Response.builder()
                 .status(200)
@@ -143,7 +158,7 @@ public class ProductServiceImpl implements ProductService {
         return Response.builder()
                 .status(200)
                 .message("success")
-                .product(modelMapper.map(product, ProductDTO.class))
+                .product(toProductDTO(product))
                 .build();
     }
 
@@ -170,8 +185,9 @@ public class ProductServiceImpl implements ProductService {
             throw new NotFoundException("Product Not Found");
         }
 
-        List<ProductDTO> productDTOList = modelMapper.map(products, new TypeToken<List<ProductDTO>>() {
-        }.getType());
+        List<ProductDTO> productDTOList = products.stream()
+                .map(this::toProductDTO)
+                .toList();
 
         return Response.builder()
                 .status(200)
@@ -205,5 +221,17 @@ public class ProductServiceImpl implements ProductService {
             throw new IllegalArgumentException("Error saving Image: " + e.getMessage());
         }
         return "product-images/" + uniqueFileName;
+    }
+
+    private ProductDTO toProductDTO(Product product) {
+        ProductDTO dto = modelMapper.map(product, ProductDTO.class);
+        if (product.getCategory() != null) {
+            dto.setCategoryId(product.getCategory().getId());
+        }
+        if (product.getSupplier() != null) {
+            dto.setSupplierId(product.getSupplier().getId());
+            dto.setSupplierName(product.getSupplier().getName());
+        }
+        return dto;
     }
 }

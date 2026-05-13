@@ -3,3 +3,4 @@
 /frontend/build
 /backend/target
 /frontend/dist/
+/backend/src/main/resources/application-local.properties

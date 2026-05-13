@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ApiService from "../service/ApiService";
+import logo from "../logo.png";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -40,7 +41,13 @@ const LoginPage = () => {
 
   return (
     <div className="auth-container">
-      <h2>Login</h2>
+      <div className="auth-brand">
+        <img className="auth-logo" src={logo} alt="IMS Logo" />
+        <div className="auth-brand-text">
+          <h2>Inventory Management System</h2>
+          <p className="auth-subtitle">Sign in to continue</p>
+        </div>
+      </div>
 
       {message && <p className="message">{message}</p>}
 

@@ -3,6 +3,7 @@ import Layout from "../component/Layout";
 import ApiService from "../service/ApiService";
 
 const CategoryPage = () => {
+  const isAdmin = ApiService.isAdmin();
   const [categories, setCategories] = useState([]);
   const [categoryName, setCategoryName] = useState("");
   const [message, setMessage] = useState("");
@@ -98,20 +99,27 @@ const CategoryPage = () => {
       <div className="category-page">
         <div className="category-header">
           <h1>Categories</h1>
-          <div className="add-cat">
-            <input
-              value={categoryName}
-              type="text"
-              placeholder="Category Name"
-              onChange={(e) => setCategoryName(e.target.value)}
-            />
+          {!isAdmin && (
+            <p className="muted-text" style={{ marginLeft: 12, flex: 1 }}>
+              View only. Add, edit, and delete require an administrator account.
+            </p>
+          )}
+          {isAdmin && (
+            <div className="add-cat">
+              <input
+                value={categoryName}
+                type="text"
+                placeholder="Category Name"
+                onChange={(e) => setCategoryName(e.target.value)}
+              />
 
-            {!isEditing ? (
-              <button onClick={addCategory}>Add Category</button>
-            ) : (
-              <button onClick={editCategory}>Edit Cateogry</button>
-            )}
-          </div>
+              {!isEditing ? (
+                <button onClick={addCategory}>Add Category</button>
+              ) : (
+                <button onClick={editCategory}>Edit Cateogry</button>
+              )}
+            </div>
+          )}
         </div>
 
         {categories && (
@@ -120,14 +128,12 @@ const CategoryPage = () => {
               <li className="category-item" key={category.id}>
                 <span>{category.name}</span>
 
-                <div className="category-actions">
-                  <button onClick={() => handleEditCategory(category)}>
-                    Edit
-                  </button>
-                  <button onClick={() => handleDeleteCategory(category.id)}>
-                    Delete
-                  </button>
-                </div>
+                {isAdmin && (
+                  <div className="category-actions">
+                    <button onClick={() => handleEditCategory(category)}>Edit</button>
+                    <button onClick={() => handleDeleteCategory(category.id)}>Delete</button>
+                  </div>
+                )}
               </li>
             ))}
           </ul>

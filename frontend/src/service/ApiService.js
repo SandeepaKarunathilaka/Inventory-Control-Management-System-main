@@ -10,7 +10,12 @@ export default class ApiService {
     /** Full URL for product images served by the backend */
     static getProductImageUrl(imageUrl) {
         if (!imageUrl) return null;
-        if (imageUrl.startsWith("http") || imageUrl.startsWith("blob:")) return imageUrl;
+        // Support absolute URLs + browser-generated preview URLs (blob/data)
+        if (
+            imageUrl.startsWith("http") ||
+            imageUrl.startsWith("blob:") ||
+            imageUrl.startsWith("data:")
+        ) return imageUrl;
         return this.IMAGE_BASE + "/" + imageUrl;
     }
 
@@ -255,15 +260,15 @@ export default class ApiService {
 
 
     /**Transactions EDNPOINTS */
-    static async stockInProduct(body) {
-        const response = await axios.post(`${this.BASE_URL}/transactions/stock-in`, body, {
+    static async purchaseProduct(body) {
+        const response = await axios.post(`${this.BASE_URL}/transactions/purchase`, body, {
             headers: this.getHeader()
         })
         return response.data;
     }
 
-    static async stockOutProduct(body) {
-        const response = await axios.post(`${this.BASE_URL}/transactions/stock-out`, body, {
+    static async sellProduct(body) {
+        const response = await axios.post(`${this.BASE_URL}/transactions/sell`, body, {
             headers: this.getHeader()
         })
         return response.data;
@@ -277,12 +282,27 @@ export default class ApiService {
         return response.data;
     }
 
-    static async getAllTransactions(filter) {
+    static async getAllTransactions(filter = "", page = 0, size = 1000) {
         const response = await axios.get(`${this.BASE_URL}/transactions/all`, {
             headers: this.getHeader(),
-            params: {filter}
+            params: { filter, page, size }
         })
         return response.data;
+    }
+
+    /** Large pull for reporting; filter client-side by date range */
+    static async getTransactionReport(startDate, endDate) {
+        return this.getAllTransactions("", 0, 50000);
+    }
+
+    /** Alias for purchase (receive stock) */
+    static async stockInProduct(body) {
+        return this.purchaseProduct(body);
+    }
+
+    /** Alias for sell (remove stock) */
+    static async stockOutProduct(body) {
+        return this.sellProduct(body);
     }
 
     static async geTransactionsByMonthAndYear(month, year) {
@@ -305,38 +325,14 @@ export default class ApiService {
     }
 
     static async updateTransactionStatus(transactionId, status) {
-        const response = await axios.put(`${this.BASE_URL}/transactions/${transactionId}`, status, {
-            headers: this.getHeader()
-        })
+        const response = await axios.put(
+            `${this.BASE_URL}/transactions/${transactionId}`,
+            JSON.stringify(status),
+            { headers: this.getHeader() }
+        );
         return response.data;
     }
 
-    static async updateTransaction(transactionId, body) {
-        const response = await axios.put(`${this.BASE_URL}/transactions/update/${transactionId}`, body, {
-            headers: this.getHeader()
-        })
-        return response.data;
-    }
-
-    static async deleteTransaction(transactionId) {
-        const response = await axios.delete(`${this.BASE_URL}/transactions/delete/${transactionId}`, {
-            headers: this.getHeader()
-        })
-        return response.data;
-    }
-
-    static async getTransactionReport(startDate, endDate) {
-        let url = `${this.BASE_URL}/transactions/report`;
-        const params = new URLSearchParams();
-        if (startDate) params.append('startDate', startDate);
-        if (endDate) params.append('endDate', endDate);
-        if (params.toString()) url += `?${params.toString()}`;
-
-        const response = await axios.get(url, {
-            headers: this.getHeader()
-        })
-        return response.data;
-    }
 
     /**AUTHENTICATION CHECKER */
     static logout(){
@@ -350,7 +346,9 @@ export default class ApiService {
 
     static isAdmin(){
         const role = this.getRole();
-        return role === "ADMIN";
+        if (!role) return false;
+        const normalized = String(role).trim().toUpperCase();
+        return normalized === "ADMIN" || normalized === "ROLE_ADMIN";
     }
 
 }
