@@ -203,7 +203,8 @@ function UserManagementPage() {
                       className="role-select"
                     >
                       <option value="ADMIN">ADMIN</option>
-                      <option value="MANAGER">MANAGER</option>
+                      <option value="WAREHOUSE_MANAGER">WAREHOUSE_MANAGER</option>
+                      <option value="INVENTORY_STAFF">INVENTORY_STAFF</option>
                     </select>
                   </td>
 
