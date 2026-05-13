@@ -3,180 +3,411 @@ import { Link, useNavigate } from "react-router-dom";
 import ApiService from "../service/ApiService";
 
 const RegisterPage = () => {
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+
   const [message, setMessage] = useState("");
-  const [fieldError, setFieldError] = useState("");
+
+  const [errors, setErrors] = useState({});
 
   const navigate = useNavigate();
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailRegex =
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
   const passwordRegex =
     /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_\-+={[}\]|\\:;"'<>,.?/~`]).{8,}$/;
-  const sriLankanMobileRegex = /^(?:\+94|0)?7[01245678]\d{7}$/;
 
-  const showMessage = (msg) => {
-    setMessage(msg);
-    setTimeout(() => {
-      setMessage("");
-    }, 4000);
+  const sriLankanMobileRegex =
+    /^(?:\+94|0)?7[01245678]\d{7}$/;
+
+  const validateField = (
+    fieldName,
+    value
+  ) => {
+
+    let error = "";
+
+    switch (fieldName) {
+
+      case "name":
+
+        if (!value.trim()) {
+          error = "Full Name is required";
+        }
+
+        else if (
+          value.trim().length < 4
+        ) {
+          error =
+            "Name must be at least 4 characters";
+        }
+
+        break;
+
+      case "email":
+
+        if (!value.trim()) {
+          error =
+            "Email Address is required";
+        }
+
+        else if (
+          !emailRegex.test(value)
+        ) {
+          error =
+            "Invalid email format";
+        }
+
+        break;
+
+      case "password":
+
+        if (!value.trim()) {
+          error =
+            "Password is required";
+        }
+
+        else if (
+          !passwordRegex.test(value)
+        ) {
+          error =
+            "Password must contain letters, numbers and symbols";
+        }
+
+        break;
+
+      case "phoneNumber":
+
+        if (!value.trim()) {
+          error =
+            "Phone Number is required";
+        }
+
+        else if (
+          !sriLankanMobileRegex.test(
+            value
+          )
+        ) {
+          error =
+            "Invalid Sri Lankan mobile number";
+        }
+
+        break;
+
+      default:
+        break;
+    }
+
+    setErrors((prev) => ({
+      ...prev,
+      [fieldName]: error,
+    }));
+
+    return error === "";
   };
 
-  const validateRegisterForm = () => {
-    if (!name.trim()) {
-      setFieldError("Name is required.");
-      return false;
-    }
+  const validateForm = () => {
 
-    if (name.trim().length < 4) {
-      setFieldError("Name must be more than 3 characters.");
-      return false;
-    }
+    const isNameValid =
+      validateField("name", name);
 
-    if (!email.trim()) {
-      setFieldError("Email is required.");
-      return false;
-    }
+    const isEmailValid =
+      validateField("email", email);
 
-    if (!emailRegex.test(email.trim())) {
-      setFieldError("Please enter a valid email address with @.");
-      return false;
-    }
-
-    if (!password.trim()) {
-      setFieldError("Password is required.");
-      return false;
-    }
-
-    if (!passwordRegex.test(password)) {
-      setFieldError(
-        "Password must be at least 8 characters and include letters, numbers, and symbols."
+    const isPasswordValid =
+      validateField(
+        "password",
+        password
       );
-      return false;
-    }
 
-    if (!phoneNumber.trim()) {
-      setFieldError("Phone number is required.");
-      return false;
-    }
-
-    if (!sriLankanMobileRegex.test(phoneNumber.trim())) {
-      setFieldError(
-        "Enter a valid Sri Lankan mobile number: +947XXXXXXXX, 07XXXXXXXX, or 7XXXXXXXX."
+    const isPhoneValid =
+      validateField(
+        "phoneNumber",
+        phoneNumber
       );
-      return false;
-    }
 
-    setFieldError("");
-    return true;
+    return (
+      isNameValid &&
+      isEmailValid &&
+      isPasswordValid &&
+      isPhoneValid
+    );
   };
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
+  const handleRegister =
+    async (e) => {
 
-    if (!validateRegisterForm()) return;
+      e.preventDefault();
 
-    try {
-      const registerData = {
-        name: name.trim(),
-        email: email.trim(),
-        password,
-        phoneNumber: phoneNumber.trim(),
-      };
+      if (!validateForm()) return;
 
-      await ApiService.registerUser(registerData);
-      showMessage("Registration successful");
-      navigate("/login");
-    } catch (error) {
-      showMessage(
-        error.response?.data?.message || "Error registering user: " + error
-      );
-      console.log(error);
-    }
-  };
+      try {
+
+        const registerData = {
+          name: name.trim(),
+          email: email.trim(),
+          password,
+          phoneNumber:
+            phoneNumber.trim(),
+        };
+
+        await ApiService.registerUser(
+          registerData
+        );
+
+        setMessage(
+          "Registration successful"
+        );
+
+        navigate("/login");
+
+      } catch (error) {
+
+        setMessage(
+          error.response?.data
+            ?.message ||
+            "Error registering user"
+        );
+
+        console.log(error);
+      }
+    };
 
   return (
+
     <div className="auth-page">
+
       <div className="auth-container glass-card">
+
         <div className="auth-brand">
-          <img src="/logo.png" alt="Web-Inventory Logo" className="auth-logo" />
+
+          <img
+            src="/logo.png"
+            alt="Web-Inventory Logo"
+            className="auth-logo"
+          />
+
           <h2>Register</h2>
-          <p className="auth-subtitle">Create your Web-Inventory account</p>
+
+          <p className="auth-subtitle">
+            Create your Web-Inventory account
+          </p>
+
         </div>
 
-        {message && <p className="message">{message}</p>}
-        {fieldError && <p className="error-message">{fieldError}</p>}
+        {message && (
+          <p className="message">
+            {message}
+          </p>
+        )}
 
-        <form onSubmit={handleRegister} noValidate>
+        <form
+          onSubmit={handleRegister}
+          noValidate
+        >
+
+          {/* FULL NAME */}
+
           <div className="form-group-auth">
-            <label htmlFor="register-name">
-              Full Name <span className="required-star">*</span>
+
+            <label>
+              Full Name{" "}
+              <span className="required-star">
+                *
+              </span>
             </label>
+
             <input
-              id="register-name"
               type="text"
               placeholder="Enter your full name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
+              onChange={(e) => {
+
+                setName(
+                  e.target.value
+                );
+
+                validateField(
+                  "name",
+                  e.target.value
+                );
+              }}
+              className={
+                errors.name
+                  ? "input-error"
+                  : ""
+              }
             />
+
+            {errors.name && (
+              <span className="field-error">
+                {errors.name}
+              </span>
+            )}
+
           </div>
 
+          {/* EMAIL */}
+
           <div className="form-group-auth">
-            <label htmlFor="register-email">
-              Email Address <span className="required-star">*</span>
+
+            <label>
+              Email Address{" "}
+              <span className="required-star">
+                *
+              </span>
             </label>
+
             <input
-              id="register-email"
               type="email"
               placeholder="Enter your email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
+              onChange={(e) => {
+
+                setEmail(
+                  e.target.value
+                );
+
+                validateField(
+                  "email",
+                  e.target.value
+                );
+              }}
+              className={
+                errors.email
+                  ? "input-error"
+                  : ""
+              }
             />
+
+            {errors.email && (
+              <span className="field-error">
+                {errors.email}
+              </span>
+            )}
+
           </div>
 
+          {/* PASSWORD */}
+
           <div className="form-group-auth">
-            <label htmlFor="register-password">
-              Password <span className="required-star">*</span>
+
+            <label>
+              Password{" "}
+              <span className="required-star">
+                *
+              </span>
             </label>
+
             <input
-              id="register-password"
               type="password"
               placeholder="Enter a strong password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
+              onChange={(e) => {
+
+                setPassword(
+                  e.target.value
+                );
+
+                validateField(
+                  "password",
+                  e.target.value
+                );
+              }}
+              className={
+                errors.password
+                  ? "input-error"
+                  : ""
+              }
             />
+
+            {errors.password ? (
+
+              <span className="field-error">
+                {errors.password}
+              </span>
+
+            ) : (
+
+              <span className="password-hint">
+                Password must be at least 8 characters
+              </span>
+            )}
+
           </div>
 
+          {/* PHONE */}
+
           <div className="form-group-auth">
-            <label htmlFor="register-phone">
-              Phone Number <span className="required-star">*</span>
+
+            <label>
+              Phone Number{" "}
+              <span className="required-star">
+                *
+              </span>
             </label>
+
             <input
-              id="register-phone"
               type="text"
               placeholder="Enter your phone number"
               value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              required
+              onChange={(e) => {
+
+                setPhoneNumber(
+                  e.target.value
+                );
+
+                validateField(
+                  "phoneNumber",
+                  e.target.value
+                );
+              }}
+              className={
+                errors.phoneNumber
+                  ? "input-error"
+                  : ""
+              }
             />
+
+            {errors.phoneNumber ? (
+
+              <span className="field-error">
+                {errors.phoneNumber}
+              </span>
+
+            ) : (
+
+              <span className="password-hint">
+                Accepted formats:
+                +947XXXXXXXX,
+                07XXXXXXXX,
+                7XXXXXXXX
+              </span>
+            )}
+
           </div>
 
-          <p className="input-hint">
-            Accepted formats: +947XXXXXXXX, 07XXXXXXXX, 7XXXXXXXX
-          </p>
+          <button type="submit">
+            Register
+          </button>
 
-          <button type="submit">Register</button>
         </form>
 
         <p>
-          Already have an account? <Link to="/login">Login</Link>
+          Already have an account?{" "}
+
+          <Link to="/login">
+            Login
+          </Link>
+
         </p>
+
       </div>
+
     </div>
   );
 };

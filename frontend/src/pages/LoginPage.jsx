@@ -3,47 +3,159 @@ import { Link, useNavigate } from "react-router-dom";
 import ApiService from "../service/ApiService";
 
 const LoginPage = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
 
-  const [message, setMessage] = useState("");
+  const [email, setEmail] =
+    useState("");
+
+  const [password, setPassword] =
+    useState("");
+
+  const [showPassword, setShowPassword] =
+    useState(false);
+
+  const [message, setMessage] =
+    useState("");
+
+  const [errors, setErrors] =
+    useState({});
+
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const emailRegex =
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    try {
-      const response = await ApiService.loginUser({
-        email,
-        password,
-      });
+  const validateField = (
+    fieldName,
+    value
+  ) => {
 
-      if (response.status === 200) {
-        ApiService.saveToken(response.token);
-        ApiService.saveRole(response.role);
+    let error = "";
 
-        setMessage("Login successful");
+    switch (fieldName) {
 
-        if (response.role === "ADMIN") {
-          navigate("/dashboard");
-        } else {
-          navigate("/dashboard");
+      case "email":
+
+        if (!value.trim()) {
+
+          error =
+            "Email Address is required";
         }
-      }
-    } catch (error) {
-      console.log(error);
 
-      setMessage(
-        error.response?.data?.message || "Invalid email or password"
-      );
+        else if (
+          !emailRegex.test(value)
+        ) {
+
+          error =
+            "Invalid email format";
+        }
+
+        break;
+
+      case "password":
+
+        if (!value.trim()) {
+
+          error =
+            "Password is required";
+        }
+
+        else if (
+          value.length < 8
+        ) {
+
+          error =
+            "Password must be at least 8 characters";
+        }
+
+        break;
+
+      default:
+        break;
     }
+
+    setErrors((prev) => ({
+      ...prev,
+      [fieldName]: error,
+    }));
+
+    return error === "";
   };
 
+  const validateForm = () => {
+
+    const emailValid =
+      validateField(
+        "email",
+        email
+      );
+
+    const passwordValid =
+      validateField(
+        "password",
+        password
+      );
+
+    return (
+      emailValid &&
+      passwordValid
+    );
+  };
+
+  const handleLogin =
+    async (e) => {
+
+      e.preventDefault();
+
+      if (!validateForm())
+        return;
+
+      try {
+
+        const response =
+          await ApiService.loginUser({
+            email,
+            password,
+          });
+
+        if (
+          response.status === 200
+        ) {
+
+          ApiService.saveToken(
+            response.token
+          );
+
+          ApiService.saveRole(
+            response.role
+          );
+
+          setMessage(
+            "Login successful"
+          );
+
+          navigate("/dashboard");
+        }
+
+      } catch (error) {
+
+        console.log(error);
+
+        setMessage(
+          error.response?.data
+            ?.message ||
+            "Invalid email or password"
+        );
+      }
+    };
+
   return (
+
     <div className="auth-page">
+
       <div className="auth-container glass-card">
+
         <div className="auth-brand">
+
           <img
             src="/logo.png"
             alt="Web-Inventory Logo"
@@ -55,82 +167,159 @@ const LoginPage = () => {
           <p className="auth-subtitle">
             Welcome back to Web-Inventory
           </p>
+
         </div>
 
-        {message && <p className="message">{message}</p>}
+        {message && (
+          <p className="message">
+            {message}
+          </p>
+        )}
 
         <form onSubmit={handleLogin}>
+
+          {/* EMAIL */}
+
           <div className="form-group-auth">
+
             <label>
-              Email Address <span className="required-star">*</span>
+              Email Address{" "}
+              <span className="required-star">
+                *
+              </span>
             </label>
 
             <input
               type="email"
               placeholder="Enter your email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="off"
+              onChange={(e) => {
+
+                setEmail(
+                  e.target.value
+                );
+
+                validateField(
+                  "email",
+                  e.target.value
+                );
+              }}
+              className={
+                errors.email
+                  ? "input-error"
+                  : ""
+              }
             />
+
+            {errors.email && (
+
+              <span className="field-error">
+                {errors.email}
+              </span>
+
+            )}
+
           </div>
+
+          {/* PASSWORD */}
 
           <div className="form-group-auth">
+
             <label>
-              Password <span className="required-star">*</span>
+              Password{" "}
+              <span className="required-star">
+                *
+              </span>
             </label>
 
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-            />
+            <div className="password-wrapper">
 
-            <div
-              style={{
-                marginTop: "8px",
-                cursor: "pointer",
-                fontSize: "14px",
-                fontWeight: "600",
-                color: "#0f766e",
-                userSelect: "none",
-              }}
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? "Hide Password" : "Show Password"}
+              <input
+                type={
+                  showPassword
+                    ? "text"
+                    : "password"
+                }
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => {
+
+                  setPassword(
+                    e.target.value
+                  );
+
+                  validateField(
+                    "password",
+                    e.target.value
+                  );
+                }}
+                className={
+                  errors.password
+                    ? "input-error"
+                    : ""
+                }
+              />
+
+              <span
+                className="show-password-btn"
+                onClick={() =>
+                  setShowPassword(
+                    !showPassword
+                  )
+                }
+              >
+                {showPassword
+                  ? "HIDE"
+                  : "SHOW"}
+              </span>
+
             </div>
+
+            {errors.password ? (
+
+              <span className="field-error">
+                {errors.password}
+              </span>
+
+            ) : (
+
+              <span className="password-hint">
+                Password must be at least 8 characters
+              </span>
+
+            )}
+
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              marginBottom: "20px",
-            }}
-          >
+          <div className="forgot-password-wrap">
+
             <Link
               to="/forgot-password"
-              style={{
-                color: "#0f766e",
-                fontWeight: "600",
-                textDecoration: "none",
-              }}
+              className="forgot-password-link"
             >
               Forgot Password?
             </Link>
+
           </div>
 
-          <button type="submit">Login</button>
+          <button type="submit">
+            Login
+          </button>
+
         </form>
 
-        <p style={{ marginTop: "20px" }}>
+        <p>
+
           Don't have an account?{" "}
-          <Link to="/register">Register</Link>
+
+          <Link to="/register">
+            Register
+          </Link>
+
         </p>
+
       </div>
+
     </div>
   );
 };
