@@ -1,5 +1,6 @@
 # Backend build files
 backend/target/
+backend/data/
 target/
 
 # Frontend dependencies/build
